@@ -8,9 +8,9 @@ surfaces go stale, blur across adjacent versions, and confabulate details that a
 rather than true — most confidently for well-known libraries, because familiarity is what
 produces the confidence, not recall accuracy.
 
-`prove-it` gives you a shorthand for "don't tell me, show me." The claim gets restated as
-something falsifiable, an experiment gets designed that could refute it, the code runs against
-the real library, and the raw output decides.
+`prove-it` gives you a shorthand for "don't tell me, show me." The claim gets restated as a
+null hypothesis, the experiment is designed to reject it, the code runs against the real
+library, and the raw output decides.
 
 ## Usage
 
@@ -38,11 +38,18 @@ tested. See [`examples/`](./examples/) for a full worked case.
 The problem this has to solve is that an agent verifying its own claim has a pull toward
 writing the test that passes. Three things push back on that:
 
-**The falsification condition is written before the code.** A prediction recorded after
-seeing output can be retrofitted to whatever appeared; one recorded before it cannot. This
-turns "the test passed" into a statement with content. Borrowed in spirit from the blind
-comparator in Anthropic's `skill-creator`, which withholds version identity from the grader
-for the same reason.
+**The null hypothesis and its falsification condition are written before the code.** H₀ is
+the claim itself — stated in the strongest form it will bear, as the thing the experiment
+exists to prove false — paired with H₁, the most plausible rival if it falls. Naming the
+rival is what makes an experiment discriminating rather than merely confirming; a wrong
+model of a function agrees with the right one on ordinary inputs and diverges at the edges.
+And a prediction recorded after seeing output can be retrofitted to whatever appeared, while
+one recorded before it cannot. Borrowed in spirit from the blind comparator in Anthropic's
+`skill-creator`, which withholds version identity from the grader for the same reason.
+
+Note the direction: H₀ is the claim, not the statistical "no effect" default. Rejecting a
+boring null would put the agent's motivation on the same side as the experiment's goal. The
+claim has to be the thing on trial.
 
 **Observed values get printed, never just asserted.** A passing `assert x == 5` is
 indistinguishable from an assertion that was never reached, and tells the reader nothing

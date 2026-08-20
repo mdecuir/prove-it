@@ -9,12 +9,20 @@ assert in passing, it sounds right, and it is false.
 
 `datetime.datetime.utcnow()` returns a timezone-aware datetime in UTC, on CPython 3.12.
 
-## Prediction and falsification condition
+## Hypotheses
 
-**Predicted:** `utcnow().tzinfo` is not `None`, and `utcoffset()` returns `timedelta(0)`.
+**H₀:** `utcnow()` returns a timezone-aware datetime in UTC.
 
-**Refuted if:** `tzinfo` is `None` — the returned object is naive, and its being
-nominally "UTC" is a convention about the numbers rather than a property of the object.
+**H₁:** it returns a *naive* datetime whose wall-clock fields happen to be UTC — "UTC"
+being a convention about the numbers rather than a property of the object.
+
+**Predicted if H₀:** `tzinfo` is not `None`, and `utcoffset()` returns `timedelta(0)`.
+
+**H₀ rejected if:** `tzinfo` is `None`.
+
+H₀ and H₁ produce the same printed wall-clock value, so the experiment has to look
+somewhere the two disagree: `tzinfo`, `utcoffset()`, and arithmetic against an aware
+datetime.
 
 ## Experiment
 
@@ -38,7 +46,7 @@ python   : 3.12.3 (CPython)
 platform : Linux-6.18.5-fc-v20-x86_64-with-glibc2.39
 
 === subject: datetime.utcnow() ===
-utcnow_awareness.py:22: DeprecationWarning: datetime.datetime.utcnow() is deprecated
+utcnow_awareness.py:28: DeprecationWarning: datetime.datetime.utcnow() is deprecated
 and scheduled for removal in a future version. Use timezone-aware objects to represent
 datetimes in UTC: datetime.datetime.now(datetime.UTC).
 value    : datetime.datetime(2026, 8, 20, 11, 24, 41, 736358)
@@ -83,7 +91,13 @@ comparison or subtraction, as the consequence probe shows. The replacement is
 
 ## Why this example
 
-It shows the two things the procedure is built around.
+It shows the three things the procedure is built around.
+
+**H₁ is what pointed at the right observable.** The naive-datetime-with-UTC-fields rival
+agrees with H₀ on everything a casual confirming test would print — the value looks like a
+UTC timestamp either way. Writing the rival down first is what forced the experiment onto
+`tzinfo`, `utcoffset()`, and the subtraction, which are the only places the two hypotheses
+disagree.
 
 The **control** is what makes a negative result trustworthy. Without it, `tzinfo: None`
 is ambiguous between "the claim is false" and "the harness is wrong," and an agent

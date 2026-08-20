@@ -1,0 +1,98 @@
+# Project context
+
+`prove-it` is an agent skill that settles claims about code behavior by designing and
+running an experiment rather than asserting harder. It was drafted in a claude.ai session
+that had no access to this repo directory; this file carries that context over.
+
+Read `README.md` for the pitch and `SKILL.md` for the skill itself before changing anything.
+
+## Origin
+
+The search that preceded the draft found adjacent tools but nothing doing this specific job:
+
+- `claude-craft/verify-claim` — verdict vocabulary and correction-at-source. Names the
+  experiment that would resolve an inconclusive case but doesn't run one.
+- `cursor/plugins` `create-verification-skill` — generates project-local skills that drive
+  the real app. Oriented toward "prove this app works," not "settle this claim."
+- `claude-fact-checker-skill` — the documentation half. Complementary rather than
+  overlapping.
+- Anthropic's `skill-creator` — its blind comparator (grader doesn't know which version
+  produced which output) is the conceptual ancestor of the falsification-condition rule.
+
+The gap was the triggering-and-scoping layer: classify a claim as empirically testable,
+design the minimal discriminating experiment, run it, and report the result even when it
+contradicts what the agent said a moment ago.
+
+## Load-bearing design decisions
+
+Three, in descending order of how much the skill depends on them:
+
+1. **H₀ and its falsification condition committed before the code exists.** The core problem
+   is that an agent verifying its own claim is pulled toward writing the test that passes. A
+   prediction recorded after seeing output can be retrofitted; one recorded before cannot. If
+   this rule erodes, the rest of the skill is theatre.
+
+   The direction of H₀ is itself load-bearing and easy to "fix" wrongly: **H₀ is the claim**,
+   not the statistical no-effect null. Flipping it to convention would put the agent's
+   motivation on the same side as the experiment's goal — rejecting "no difference" is just
+   confirming your own assertion with extra steps. The performance section of
+   `references/experiment-patterns.md` is the one place the two coincide, because there the
+   claim *is* the effect.
+
+   H₁ (the most plausible rival) was added alongside for a separate reason: a falsification
+   condition names a *result*, while a rival names the thing you would be *wrong about*, and
+   only the latter tells you which input to choose. Dropping H₁ back out would leave the
+   skill confirming claims against inputs where every candidate model agrees.
+
+2. **Observed values printed, never merely asserted.** A passing `assert x == 5` is
+   indistinguishable from an assertion that was never reached.
+
+3. **The real library is exercised.** Mocks and reimplementations encode the assumption
+   under test and can only confirm it.
+
+Supporting decision: `Inconclusive` is a first-class verdict. Absence claims and
+thread-safety claims genuinely cannot be settled by execution — a failed probe isn't proof
+of absence, and clean concurrent runs aren't proof of safety. Manufactured confidence in
+those categories is the failure mode worth designing against, so don't "improve" the skill
+by making it more decisive there.
+
+## Known weaknesses in the current draft
+
+- **The failure-mode table in `SKILL.md` is reasoned, not observed.** It was written by
+  predicting how verifications go wrong, not by watching them go wrong. Expect some entries
+  to be irrelevant and some real failures to be missing. Running the skill against real
+  claims should reshape this table; treat that as the highest-value next edit.
+- **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
+  skill-creator guidance, but never run through the description-tuning loop.
+- **No evals exist.** No `evals/evals.json`, no test prompts, no measured trigger rate.
+- **Only one worked example**, and it's a refutation. There's no example of a verified
+  claim, an inconclusive verdict, or a comparative/performance claim — the categories where
+  the reference file does the most work are the least exercised.
+
+## Next steps, roughly in order
+
+1. Build a test set of claims deliberately mixing outcomes: some that should verify, some
+   that should refute, and at least one absence claim and one thread-safety claim that
+   *should* land inconclusive. The inconclusive ones matter most — they test whether the
+   skill resists manufacturing a verdict.
+2. Run the skill against them and rewrite the failure-mode table from what actually happens.
+3. Run skill-creator's description optimiser. It needs `claude -p`, which is why it was
+   skipped in the originating session:
+   ```
+   python -m scripts.run_loop --eval-set <trigger-eval.json> --skill-path . \
+     --model <model-id> --max-iterations 5 --verbose
+   ```
+4. Add examples covering a verified verdict and a comparative claim.
+5. Only then consider the user-controlled-code extension (see the Scope section of
+   `SKILL.md`) — the risk profile inverts there and it deserves its own design pass rather
+   than being bolted on.
+
+## Conventions
+
+- `SKILL.md` stays under ~500 lines; depth goes into `references/`.
+- Explain *why* a rule exists rather than issuing bare MUSTs — the skill is read by a model
+  that follows reasoning better than commands.
+- Example scripts are real and actually run. The output in `examples/README.md` was captured
+  from a real execution, including an unpredicted deprecation warning that was deliberately
+  kept because it illustrates why raw output precedes interpretation. Don't replace captured
+  output with plausible-looking output.

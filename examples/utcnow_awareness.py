@@ -1,8 +1,14 @@
 """
-Claim: `datetime.datetime.utcnow()` returns a timezone-aware datetime in UTC.
+H0: `datetime.datetime.utcnow()` returns a timezone-aware datetime in UTC.
+H1: it returns a naive datetime whose wall-clock fields happen to be UTC --
+    "UTC" being a convention about the numbers, not a property of the object.
 
-Predicted if true:  utcnow().tzinfo is not None, and .utcoffset() == 0:00:00
-Refuted if:         utcnow().tzinfo is None (i.e. the object is naive)
+Predicted if H0:  utcnow().tzinfo is not None, and .utcoffset() == 0:00:00
+H0 rejected if:   utcnow().tzinfo is None (i.e. the object is naive)
+
+H0 and H1 print identically if you only look at the wall-clock value, which is
+why this script prints tzinfo and utcoffset instead, and then tries the
+arithmetic that only works if H0 holds.
 
 Control: datetime.now(timezone.utc), which is documented as aware. If the
 control also came back naive, the harness would be at fault rather than the

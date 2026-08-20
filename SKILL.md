@@ -29,16 +29,23 @@ Behavior claims are always claims about a *(library, version)* pair. If the vers
 
 If sharpening changes the meaning of the claim, flag it and ask. Quietly testing a weaker proposition than the one asserted is a way of appearing to verify while verifying nothing.
 
-### 2. Commit to a prediction and a falsification condition — before writing any code
+### 2. State the null hypothesis, its rival, and the falsification condition — before writing any code
 
-Write both, in the response, before the script exists:
+Write all three, in the response, before the script exists:
 
-- **Prediction:** what the run will output if the claim holds.
-- **Falsification condition:** the specific observable result that would mean the claim is false.
+- **H₀ (null hypothesis):** the claim, in the strongest form it will bear. This is the proposition the experiment exists to prove false.
+- **H₁ (rival):** the most plausible thing that is true instead, if H₀ falls.
+- **Falsification condition:** the specific observable that would reject H₀.
 
-This ordering is the whole mechanism. A prediction recorded after seeing output can be retrofitted to whatever appeared; a prediction recorded before it cannot. It converts "the test passed" into a claim with actual content.
+H₀ here is the claim itself, not the statistical "no effect" default. The inversion is deliberate and load-bearing: an experiment that sets out to reject its own assertion is working against the agent's bias, whereas one that sets out to reject a boring null is working with it. Keep the claim on trial. (For performance and comparative claims the claim *is* the effect, so H₀ is "A is faster than B by margin M" and H₁ is "the difference sits inside run-to-run variance." Same rule, and it is what gives the variance requirement in `references/experiment-patterns.md` its teeth.)
 
-If no result can be named that would refute the proposition, stop. The claim is either vacuous, or it isn't empirical, or it hasn't been sharpened enough yet. Return to step 1 or say so plainly.
+Naming H₁ is what makes an experiment *discriminating* rather than merely confirming. A wrong model of a function usually agrees with the right one on ordinary inputs and diverges only at the edges, so the input worth running is the one that separates H₀ from H₁ — not the one that shows H₀ working. "`str.strip()` takes a set of characters" has the rival "it takes a substring," and the two agree on nearly every input a confirming test would reach for.
+
+Stating H₀ in its strongest form is the anti-retrofit device. A hedged null survives anything, and if a refuting result later prompts a narrower claim, the narrowing is visibly a *different* H₀ rather than the same one clarified.
+
+This ordering is the whole mechanism. A prediction recorded after seeing output can be retrofitted to whatever appeared; one recorded before it cannot. It converts "the test passed" into a statement with content.
+
+If no observable can be named that would reject H₀, stop. The claim is either vacuous, or not empirical, or not yet sharpened. Return to step 1 or say so plainly.
 
 ### 3. Design the minimal discriminating experiment
 
@@ -68,9 +75,9 @@ If the script errors, that is a result, not a setback to be quietly fixed. Disti
 
 ### 6. Deliver a verdict
 
-- **Verified** — the observable matched the prediction, under the stated environment. Scope the verdict to what was actually tested. "Verified for CPython 3.12" is honest; "Verified" is usually broader than the evidence.
-- **Refuted** — say so directly and early, especially when the claim being refuted is one you made yourself earlier in the conversation. Name the correction: not just "that was wrong" but what the behavior actually is. This is the case that produces most of the value; treat it as the successful outcome it is, without hedging or burying it under context.
-- **Inconclusive** — a real verdict, not a failure. The experiment ran but doesn't discriminate. State exactly what would resolve it.
+- **Verified** — H₀ survived a real attempt to reject it, under the stated environment. Strictly this is *failed to reject*, and that distinction is what forces honest scoping: "Verified for CPython 3.12" is defensible; bare "Verified" is almost always broader than the evidence.
+- **Refuted** — H₀ was rejected. Say so directly and early, especially when the claim being refuted is one you made yourself earlier in the conversation. Name the correction: not just "that was wrong" but what the behavior actually is. This is the case that produces most of the value; treat it as the successful outcome it is, without hedging or burying it under context.
+- **Inconclusive** — a real verdict, not a failure. The experiment ran but does not separate H₀ from H₁. State exactly what would.
 - **Ill-posed** — the claim can't be made falsifiable. Explain what's ambiguous.
 
 ### 7. Follow through to the source
@@ -94,7 +101,9 @@ These are the ways a verification produces a green result while proving nothing.
 | Version drift | Claim was about v2; the environment silently resolved v3 |
 | The easy case only | The claim is tested where it obviously holds, never at the boundary where it might not |
 | Single-shot benchmark | One timing run, no warmup, no variance — noise reported as a finding |
-| Retrofitted claim | After a refuting result, the claim is restated as something narrower that survives |
+| Unfalsifiable null | H₀ hedged ("generally", "in most cases") until no observation could reject it |
+| No rival named | H₀ is confirmed without ever being separated from the near-neighbour it is usually confused with |
+| Retrofitted claim | After a refuting result, H₀ is restated as something narrower that survives |
 | Absence by failed probe | One probe failed, therefore the feature doesn't exist — see `references/experiment-patterns.md` |
 
 ## Report format
@@ -103,9 +112,10 @@ These are the ways a verification produces a green result while proving nothing.
 ## Claim
 [The sharpened, falsifiable proposition]
 
-## Prediction and falsification condition
-Predicted: [what the run should output if true]
-Refuted if: [the specific result that would mean it's false]
+## Hypotheses
+H₀: [the claim, strongest form — what this experiment tries to prove false]
+H₁: [the most plausible rival if H₀ falls]
+Rejected if: [the specific observable that would reject H₀]
 
 ## Experiment
 [Path to the script, and one or two sentences on why this design discriminates]
@@ -124,7 +134,7 @@ Refuted if: [the specific result that would mean it's false]
 [Code, plans, or docs that need correcting. Omit if none.]
 ```
 
-For a single quick probe, collapse this — but never drop the falsification condition or the raw output. Those two are what separate this from a confident guess.
+For a single quick probe, collapse this — but never drop H₀, its falsification condition, or the raw output. Those are what separate this from a confident guess.
 
 ## Scope
 
