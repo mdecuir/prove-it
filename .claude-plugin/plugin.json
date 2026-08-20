@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "prove-it",
+  "version": "0.1.0",
+  "description": "Settle a claim about how code actually behaves by designing and running a minimal experiment against the real library, then reporting the result even when it refutes the claim.",
+  "author": {
+    "name": "Mike Decuir",
+    "email": "mike.decuir@adaptx.com"
+  },
+  "homepage": "https://github.com/mdecuir/prove-it",
+  "repository": "https://github.com/mdecuir/prove-it",
+  "license": "MIT",
+  "keywords": [
+    "verification",
+    "falsification",
+    "experiment",
+    "testing",
+    "hypothesis"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "prove-it",
+  "owner": {
+    "name": "Mike Decuir",
+    "url": "https://github.com/mdecuir"
+  },
+  "description": "The prove-it skill: settle claims about code behavior by running an experiment instead of asserting harder.",
+  "plugins": [
+    {
+      "name": "prove-it",
+      "source": "./",
+      "displayName": "Prove It",
+      "description": "Settle a claim about how code actually behaves by designing and running a minimal experiment against the real library, then reporting the result even when it refutes the claim.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Mike Decuir"
+      },
+      "homepage": "https://github.com/mdecuir/prove-it",
+      "repository": "https://github.com/mdecuir/prove-it",
+      "license": "MIT",
+      "keywords": ["verification", "falsification", "experiment", "testing", "hypothesis"]
+    }
+  ]
+}

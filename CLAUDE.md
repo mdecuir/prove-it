@@ -4,7 +4,8 @@
 running an experiment rather than asserting harder. It was drafted in a claude.ai session
 that had no access to this repo directory; this file carries that context over.
 
-Read `README.md` for the pitch and `SKILL.md` for the skill itself before changing anything.
+Read `README.md` for the pitch and `skills/prove-it/SKILL.md` for the skill itself before
+changing anything.
 
 ## Origin
 
@@ -86,6 +87,28 @@ by making it more decisive there.
 5. Only then consider the user-controlled-code extension (see the Scope section of
    `SKILL.md`) — the risk profile inverts there and it deserves its own design pass rather
    than being bolted on.
+
+## Packaging
+
+The repo is both a plugin and its own single-plugin marketplace: `.claude-plugin/plugin.json`
+plus `.claude-plugin/marketplace.json` with `source: "./"`. That one layout serves both
+install paths — `/plugin install prove-it@prove-it`, and cloning into `~/.claude/skills/prove-it`
+where it loads as `prove-it@skills-dir`.
+
+Two things were established by running `claude plugin details` rather than by assumption, and
+both are easy to break:
+
+- **The skill must live at `skills/prove-it/SKILL.md`.** A root-level `SKILL.md` is *not*
+  discovered as a plugin component, even with `"skills": ["./"]` in the manifest — that is
+  what `claude plugin init` scaffolds, and its own root `SKILL.md` reports `Skills (0)`.
+  Root `SKILL.md` only works for the older bare-skill-directory convention.
+- **Versions in `plugin.json` and the `marketplace.json` entry must agree.**
+  `claude plugin tag` refuses to cut a release tag when they drift, so bump both.
+
+`claude plugin validate .` checks the manifests. It validates whichever manifest it finds
+first, so point it at `.claude-plugin/plugin.json` explicitly to check that one. It warns that
+this file, `CLAUDE.md`, is not loaded as plugin context — that is correct and intended; it is
+repo context for whoever edits the skill, not part of the shipped plugin.
 
 ## Conventions
 

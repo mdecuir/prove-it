@@ -88,23 +88,70 @@ stated requirement, never from reading the implementation.
 
 ## Install
 
-Clone into your skills directory:
+### As a plugin (recommended)
+
+The repo doubles as its own single-plugin marketplace. In Claude Code:
+
+```
+/plugin marketplace add mdecuir/prove-it
+/plugin install prove-it@prove-it
+```
+
+Or from the shell:
 
 ```bash
-git clone <this-repo> ~/.claude/skills/prove-it
+claude plugin marketplace add mdecuir/prove-it
+claude plugin install prove-it@prove-it
 ```
+
+Add `--scope project` to either command to commit the marketplace and the plugin to a
+project's `.claude/settings.json`, so the whole team picks it up on clone.
+
+Updating:
+
+```bash
+claude plugin update prove-it
+```
+
+### As a skill
+
+Clone into your skills directory. Claude Code loads any manifest-bearing directory there as
+`<name>@skills-dir`, so the same layout works with no plugin install:
+
+```bash
+git clone https://github.com/mdecuir/prove-it.git ~/.claude/skills/prove-it
+```
+
+Either way, restart Claude Code and confirm the skill was picked up:
+
+```bash
+claude plugin details prove-it            # or: prove-it@skills-dir
+```
+
+Expected: `Skills (1)  prove-it`. Skills load on invocation — only the description string
+sits in the always-on context.
 
 ## Layout
 
 ```
 prove-it/
-├── SKILL.md                            # procedure, failure modes, report format
-├── references/
-│   └── experiment-patterns.md          # per-claim-type experiment design
+├── .claude-plugin/
+│   ├── plugin.json                     # plugin manifest
+│   └── marketplace.json                # single-plugin marketplace, source "./"
+├── skills/
+│   └── prove-it/
+│       ├── SKILL.md                    # procedure, failure modes, report format
+│       └── references/
+│           └── experiment-patterns.md  # per-claim-type experiment design
 └── examples/
     ├── README.md                       # worked end-to-end case
     └── utcnow_awareness.py
 ```
+
+The skill has to live at `skills/<name>/SKILL.md`. A `SKILL.md` at the repo root is not
+discovered as a plugin component, even with `"skills": ["./"]` in the manifest — verified
+with `claude plugin details`, which reported `Skills (0)` for the root layout and
+`Skills (1)` for this one.
 
 ## License
 
