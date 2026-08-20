@@ -102,7 +102,13 @@ consistency check -- the two-pass arm should be its two passes and nothing else:
 
 ## Verdict
 
-**Refuted**, on this workload and machine: +54%, against a committed margin of 10%.
+**Refuted**, on this workload and machine.
+
+**H₀ was:** the two-pass pipeline finishes within M = 10% of the single-pass pipeline on
+the same workload.
+**Observed:** two-pass median 0.135s against one-pass median 0.088s — **+54%**, over five
+times the committed margin, with both compared arms' spread at 6% or less.
+**Now believed:** H₁, and the parse-share measurement explains the mechanism it predicted.
 
 The reread is not a rounding error, and the parse share says why. Parsing is **85%** of the
 single-pass pipeline, so the pipeline essentially *is* the read — validation and

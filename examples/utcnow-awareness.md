@@ -71,6 +71,11 @@ control aware? True
 
 **Refuted**, on CPython 3.12.3.
 
+**H₀ was:** `utcnow()` returns a timezone-aware datetime in UTC.
+**Observed:** `tzinfo: None` and `utcoffset(): None` on the subject; `tzinfo:
+datetime.timezone.utc` and `utcoffset(): 0:00:00` on the control.
+**Now believed:** H₁, exactly as conjectured.
+
 `utcnow()` returns a *naive* datetime whose wall-clock fields happen to be UTC. It
 carries no timezone information, so nothing downstream can tell that it is UTC rather
 than local time. The control confirms the harness detects awareness correctly, so the

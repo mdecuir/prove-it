@@ -75,6 +75,20 @@ If the script errors, that is a result, not a setback to be quietly fixed. Disti
 
 ### 6. Deliver a verdict
 
+Restate H₀ verbatim in the verdict, beside the observation that decided it.
+
+By the time a verdict gets written, H₀ is far up the transcript with script-writing and tool
+output in between. A bare "Refuted" makes the reader scroll back to find out *what* was
+refuted, and an agent writing the verdict is working from the same distance. Restating closes
+that gap. Quoting the committed wording rather than paraphrasing from memory is also what
+makes a retrofit visible — a paraphrase written after seeing the result is precisely where a
+claim quietly narrows to fit.
+
+Then say which hypothesis is now the operative belief, because rejecting H₀ does not install
+H₁: H₁ was a conjecture too. If the observed behavior matches neither, flag that loudly. It
+means the space of candidate models was drawn wrongly, not just that the wrong one was picked
+out of it — and that is a much more useful thing for the reader to learn than a rejected H₀.
+
 - **Verified** — H₀ survived a real attempt to reject it, under the stated environment. Strictly this is *failed to reject*, and that distinction is what forces honest scoping: "Verified for CPython 3.12" is defensible; bare "Verified" is almost always broader than the evidence.
 - **Refuted** — H₀ was rejected. Say so directly and early, especially when the claim being refuted is one you made yourself earlier in the conversation. Name the correction: not just "that was wrong" but what the behavior actually is. This is the case that produces most of the value; treat it as the successful outcome it is, without hedging or burying it under context.
 - **Inconclusive** — a real verdict, not a failure. The experiment ran but does not separate H₀ from H₁. State exactly what would.
@@ -103,7 +117,8 @@ These are the ways a verification produces a green result while proving nothing.
 | Single-shot benchmark | One timing run, no warmup, no variance — noise reported as a finding |
 | Unfalsifiable null | H₀ hedged ("generally", "in most cases") until no observation could reject it |
 | No rival named | H₀ is confirmed without ever being separated from the near-neighbour it is usually confused with |
-| Retrofitted claim | After a refuting result, H₀ is restated as something narrower that survives |
+| Retrofitted claim | The verdict's restatement of H₀ is narrower than the committed wording — check it against the text, not the memory |
+| Verdict with no restatement | "Refuted." Refuted *what*? The claim has scrolled away, so nobody re-checks the fit between it and the evidence |
 | Absence by failed probe | One probe failed, therefore the feature doesn't exist — see `references/experiment-patterns.md` |
 
 ## Report format
@@ -127,14 +142,17 @@ Rejected if: [the specific observable that would reject H₀]
 [Verbatim]
 
 ## Verdict
-[Verified | Refuted | Inconclusive | Ill-posed] — scoped to what was actually tested.
-[If refuted: what the behavior actually is.]
+**[Verified | Refuted | Inconclusive | Ill-posed]** — scoped to what was actually tested.
+
+H₀ was:       [the committed H₀, verbatim from above — not paraphrased]
+Observed:     [the specific value or measurement that decided it]
+Now believed: [H₁, or the third thing that turned out true, or H₀ as stated]
 
 ## Consequences
 [Code, plans, or docs that need correcting. Omit if none.]
 ```
 
-For a single quick probe, collapse this — but never drop H₀, its falsification condition, or the raw output. Those are what separate this from a confident guess.
+For a single quick probe, collapse this — but never drop H₀, its falsification condition, the raw output, or the restatement of H₀ in the verdict. Those are what separate this from a confident guess.
 
 ## Scope
 
