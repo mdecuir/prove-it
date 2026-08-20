@@ -11,11 +11,40 @@ This skill replaces the assertion with an experiment. The claim gets restated as
 
 The load-bearing property is that **the experiment must be able to refute the claim**. An agent testing its own assertion has an obvious pull toward writing the test that passes. Everything below is structured to make that harder.
 
-## What this applies to
+## Triage first
 
-Settle by execution: return values, raised exceptions, default arguments, ordering and stability guarantees, mutation vs. copy semantics, encoding and coercion behavior, version compatibility, and relative performance between two concrete options.
+Three questions, in order. They lead to different work, and misrouting here wastes more effort than any later mistake.
 
-Do not use execution for: what the documentation *recommends*, design and style questions, claims about a library's roadmap, or claims about a system you have no access to. Say the claim isn't executable and offer the appropriate alternative — usually a documentation lookup with a citation. A fabricated experiment is far worse than an honest "I can't test that from here."
+**1. Could any observation settle this?** If no, the claim is not empirical. Design and style preferences, what the documentation *recommends*, roadmap speculation, "is this idiomatic" — no run decides these, and a run that appears to is measuring something else. Verdict **Ill-posed**. Say what would have to be pinned down to make it a claim, and answer the underlying question directly instead. There is usually a real question behind it that deserves a real answer.
+
+**2. Can the experiment be run from here, at acceptable cost?** If no, the claim is empirical and the experiment is real, but it is out of reach. Verdict **Untested**, and see below — this is a distinct outcome with actual work attached, not a shrug.
+
+**3. Otherwise, run the procedure.** Settle by execution: return values, raised exceptions, default arguments, ordering and stability guarantees, mutation vs. copy semantics, encoding and coercion behavior, version compatibility, and relative performance between two concrete options.
+
+A fabricated experiment is far worse than an honest "I can't settle that from here." So is a real experiment that quietly answers an easier question than the one asked.
+
+### When the experiment is impractical
+
+An **Untested** verdict has to name its barrier. Only these count:
+
+- **Real money.** Provisioning managed infrastructure, egress, per-request billing at meaningful volume.
+- **Irreversible or outward-facing side effects.** Writes to production, sends to third parties, anything with a blast radius.
+- **Scale that isn't available.** The claim is about terabytes, thousands of concurrent clients, or months of accumulated data, and it does not hold at toy scale.
+- **Wall-clock beyond the session.** Hours-long jobs, multi-day soak tests.
+- **Access you don't have.** Credentials, a licensed dependency, specific hardware, a private network.
+- **An external dependency you don't control.** A third-party service whose behavior can change under you, making any result unreproducible.
+
+Never remove one of these barriers by provisioning billable or irreversible resources to settle a claim. The claim is not worth the invoice or the incident, and this skill's habit of "just run it" is exactly the wrong instinct here. Ask, don't proceed.
+
+Naming a barrier is necessary but not sufficient, because **Untested** is the easiest verdict to reach for dishonestly — it costs nothing and it always sounds reasonable. Earn it by decomposing the claim into three parts and reporting each:
+
+- **What is testable here.** Almost always more than zero. A claim about a managed service's bulk-import throughput still has a local half: how long generating the input takes, what the payload size actually is, whether the file format is what you assumed. Run that half.
+- **What has to be sourced instead.** Published pricing, documented limits, service quotas, a changelog — with a citation and a date, because these change. Cite what the vendor states, and mark it as vendor-stated rather than observed.
+- **What nobody can settle without the real thing,** and what specifically would settle it — the smallest real-world trial that would decide it, so someone with the access can act on it.
+
+A scaled-down proxy is worth running when it exists, but say plainly what does not extrapolate from it. Costs with volume tiers, anything with a cold-start or warm-cache component, and anything contended are the usual places where small-scale results mislead about large-scale behavior.
+
+The pattern for this claim type is in `references/experiment-patterns.md`.
 
 ## Procedure
 
@@ -55,7 +84,7 @@ If no observable can be named that would reject H₀, stop. The claim is either 
 - **Include the near-miss case.** If the claim is "X raises on empty input," also run the non-empty input. Without it, a script that raises for an unrelated reason looks like confirmation.
 - **Keep it small.** A twenty-line script that the user can read in one pass and re-run themselves is worth more than a thorough harness they have to trust.
 
-Per-claim-type recipes — semantic, comparative, performance, exception, version-compatibility, and absence claims — are in `references/experiment-patterns.md`. Read it when the claim type isn't a straightforward "what does this return."
+Per-claim-type recipes are in `references/experiment-patterns.md`: semantic, comparative, performance, exception, version-compatibility, absence, and concurrency claims, plus the two that don't get run — claims about systems you can't reach, and claims that aren't empirical. Read it when the claim type isn't a straightforward "what does this return."
 
 ### 4. Write the script as a standalone, re-runnable artifact
 
@@ -92,7 +121,8 @@ out of it — and that is a much more useful thing for the reader to learn than 
 - **Verified** — H₀ survived a real attempt to reject it, under the stated environment. Strictly this is *failed to reject*, and that distinction is what forces honest scoping: "Verified for CPython 3.12" is defensible; bare "Verified" is almost always broader than the evidence.
 - **Refuted** — H₀ was rejected. Say so directly and early, especially when the claim being refuted is one you made yourself earlier in the conversation. Name the correction: not just "that was wrong" but what the behavior actually is. This is the case that produces most of the value; treat it as the successful outcome it is, without hedging or burying it under context.
 - **Inconclusive** — a real verdict, not a failure. The experiment ran but does not separate H₀ from H₁. State exactly what would.
-- **Ill-posed** — the claim can't be made falsifiable. Explain what's ambiguous.
+- **Untested** — the experiment is real but out of reach. Name the barrier, report the part that *was* testable, cite what the rest rests on, and state the smallest real trial that would settle it. Never dress this up as Verified because the vendor's documentation agrees with the claim; documentation is a citation, not an observation.
+- **Ill-posed** — no observation could settle the claim. Explain what's ambiguous, then answer the real question behind it.
 
 ### 7. Follow through to the source
 
@@ -104,7 +134,7 @@ A refuted claim usually has descendants. Find them:
 
 ## Failure modes
 
-These are the ways a verification produces a green result while proving nothing. Check against them before reporting.
+These are the ways a verification produces a confident-looking result while proving nothing. Check against them before reporting.
 
 | Failure | What it looks like |
 |---|---|
@@ -120,6 +150,10 @@ These are the ways a verification produces a green result while proving nothing.
 | Retrofitted claim | The verdict's restatement of H₀ is narrower than the committed wording — check it against the text, not the memory |
 | Verdict with no restatement | "Refuted." Refuted *what*? The claim has scrolled away, so nobody re-checks the fit between it and the evidence |
 | Absence by failed probe | One probe failed, therefore the feature doesn't exist — see `references/experiment-patterns.md` |
+| Citation reported as observation | The vendor's docs agree with the claim, so it's called Verified. Nothing ran; a source was found |
+| Untested as a shrug | A barrier is named and the report stops there — no local half run, no source cited, no real trial specified |
+| Proxy for the unmeasurable | An inexecutable claim is silently replaced by an adjacent measurable one, and the proxy's result is offered as the verdict |
+| Barrier removed by provisioning | Billable or irreversible infrastructure gets created to settle a claim that wasn't worth an invoice |
 
 ## Report format
 
@@ -142,7 +176,7 @@ Rejected if: [the specific observable that would reject H₀]
 [Verbatim]
 
 ## Verdict
-**[Verified | Refuted | Inconclusive | Ill-posed]** — scoped to what was actually tested.
+**[Verified | Refuted | Inconclusive | Untested | Ill-posed]** — scoped to what was actually tested.
 
 H₀ was:       [the committed H₀, verbatim from above — not paraphrased]
 Observed:     [the specific value or measurement that decided it]

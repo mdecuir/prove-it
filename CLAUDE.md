@@ -51,11 +51,20 @@ Three, in descending order of how much the skill depends on them:
 3. **The real library is exercised.** Mocks and reimplementations encode the assumption
    under test and can only confirm it.
 
-Supporting decision: `Inconclusive` is a first-class verdict. Absence claims and
-thread-safety claims genuinely cannot be settled by execution — a failed probe isn't proof
-of absence, and clean concurrent runs aren't proof of safety. Manufactured confidence in
-those categories is the failure mode worth designing against, so don't "improve" the skill
-by making it more decisive there.
+Supporting decision: the non-`Verified` verdicts are first-class. `Inconclusive` exists
+because absence claims and thread-safety claims genuinely cannot be settled by execution — a
+failed probe isn't proof of absence, and clean concurrent runs aren't proof of safety.
+Manufactured confidence in those categories is the failure mode worth designing against, so
+don't "improve" the skill by making it more decisive there.
+
+`Untested` was added later, for the claim that is empirical and would be settled by a real
+experiment that simply can't be run from here — cost, scale, production access, wall-clock.
+It is deliberately expensive to reach: a barrier from a closed list, plus a three-part
+decomposition (run the local half, cite the remote half *as sourced*, name the smallest real
+trial). Without that it degenerates into the cheapest verdict in the set, because it always
+sounds reasonable. The hard guardrail alongside it — never provision billable or irreversible
+resources to settle a claim — exists because this skill's whole instinct is "just run it", and
+that instinct is actively dangerous once a cloud account is in reach.
 
 ## Known weaknesses in the current draft
 
@@ -65,7 +74,12 @@ by making it more decisive there.
   claims should reshape this table; treat that as the highest-value next edit.
 - **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
   skill-creator guidance, but never run through the description-tuning loop.
-- **No evals exist.** No `evals/evals.json`, no test prompts, no measured trigger rate.
+- **The test set exists but has never been run.** `evals/test-claims.md` has ten claims with
+  known-correct verdicts spread across all five, including two boundary traps. Nothing has been
+  executed against it, so there is still no measured trigger rate and no observed failure data.
+  It is markdown rather than `evals/**/case.yaml` because `claude plugin eval` is gated behind
+  early access on this account and its schema couldn't be read from the tool; `claude plugin
+  eval init --bare` just prints the gate message.
 - **Both worked examples are refutations.** There's still no example of a verified claim or
   an inconclusive verdict. `examples/reread-cost.md` covers the performance category (and
   its writeup deliberately keeps both harness bugs visible, because the corrections are the
@@ -73,11 +87,14 @@ by making it more decisive there.
 
 ## Next steps, roughly in order
 
-1. Build a test set of claims deliberately mixing outcomes: some that should verify, some
-   that should refute, and at least one absence claim and one thread-safety claim that
-   *should* land inconclusive. The inconclusive ones matter most — they test whether the
-   skill resists manufacturing a verdict.
-2. Run the skill against them and rewrite the failure-mode table from what actually happens.
+1. ~~Build a test set of claims deliberately mixing outcomes.~~ Done — `evals/test-claims.md`.
+   The cases that matter most are `inconclusive-itertools-count-threadsafe` (does the skill
+   resist manufacturing a verdict from a hundred green runs?) and the two boundary traps,
+   which resemble a verdict they must not receive.
+2. **Run the skill against them and rewrite the failure-mode table from what actually happens.**
+   This is now the highest-value edit in the repo. The table has grown to sixteen rows, every
+   one of them predicted rather than observed, and four were added with the `Untested` and
+   `Ill-posed` work without a single real run behind them.
 3. Run skill-creator's description optimiser. It needs `claude -p`, which is why it was
    skipped in the originating session:
    ```

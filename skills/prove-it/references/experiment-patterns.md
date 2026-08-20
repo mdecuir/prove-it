@@ -11,6 +11,8 @@ Each section also names the rival hypothesis (H₁) that claim type is usually c
 - [Version and compatibility claims](#version-and-compatibility-claims)
 - [Absence claims](#absence-claims)
 - [Concurrency and ordering claims](#concurrency-and-ordering-claims)
+- [Claims about systems you can't run](#claims-about-systems-you-cant-run)
+- [Claims that aren't empirical](#claims-that-arent-empirical)
 
 ---
 
@@ -128,3 +130,39 @@ For ordering claims, distinguish *guaranteed* order from *observed* order. Many 
 The realistic verdict for a thread-safety claim is usually **Inconclusive** with a note that only the documentation or the source can establish the guarantee. Say that rather than manufacturing confidence from a hundred green runs.
 
 **False green:** one clean concurrent run, reported as "thread-safe, verified."
+
+---
+
+## Claims about systems you can't run
+
+*"The managed bulk-import path costs less than streaming the same rows in." "That warehouse query will finish inside the batch window at production volume."*
+
+The claim is empirical. Somebody could settle it. It just isn't going to be settled from here, because settling it means real money, production access, or terabytes you don't have. The verdict is **Untested**, and the work is decomposition rather than execution.
+
+Split the claim along the boundary of what you can reach:
+
+1. **Run the local half.** There nearly always is one, and it is nearly always where the surprises are. A claim about an import endpoint's throughput sits downstream of a payload you generate yourself: how long does generating it take, how large is it really, is the on-disk format the one you assumed, does the row count match. The `examples/reread-cost.md` case in this repo started as exactly this — the untestable cloud half was set aside and the local file-reading half turned out to decide the design question on its own.
+2. **Source the remote half, and mark it as sourced.** Published pricing, documented quotas, service limits, the changelog. Cite it with a date. Vendor-stated numbers are evidence of a different kind from observed ones, and the report must not blur them — "the docs say 100 MB/s" and "we measured 100 MB/s" fail in different ways, and only the second one is yours.
+3. **Name the smallest real trial that would settle it.** Not "test it in production" but the specific minimal thing: one import of N rows into a scratch instance, with the two figures to record. This is the part someone with the access can actually act on, and it is what makes an Untested verdict useful rather than merely honest.
+
+**On scaled-down proxies.** Run one when it exists, and say what does not extrapolate. Three things routinely don't: anything with volume pricing tiers, anything with a cold-start or cache-warming component, and anything under contention. A proxy at 1/1000 scale answers a question about 1/1000 scale, and the interesting claims are usually about the part that only appears at full size.
+
+**Never lift the barrier by provisioning.** Do not create the cluster, the bucket, or the instance to settle a claim, even when the API call is one line and the free tier would probably cover it. The cost of being wrong is an invoice or an incident, and it is not your call to make. Ask.
+
+**False green:** the vendor's documentation agrees with the claim, so it is reported as **Verified**. Nothing was observed; a citation was found. That is a documentation lookup, and calling it verification is precisely the confusion this skill exists to prevent.
+
+---
+
+## Claims that aren't empirical
+
+*"This API is well designed." "polars is more readable than pandas." "You should use a queue here."*
+
+No observation settles these, and the tell is that no result would change anyone's mind. Reach for the falsification condition and nothing comes: there is no output that the claim's proponent would accept as refuting it.
+
+The failure mode is not usually refusing to test them. It is **testing an adjacent claim and presenting it as the answer.** "Is this API well designed" quietly becomes "does this API require fewer lines for the common case," which is measurable, and gets measured, and the measurement is then offered as though it settled the original. It didn't. It settled a proxy that happens to be executable, chosen because it was executable.
+
+So: say the claim isn't empirical, say what is ambiguous in it, and then **answer the underlying question directly** — with judgement, experience, and reasoning, which is what it wanted in the first place. Sometimes a measurable sub-claim genuinely is worth settling on the way; run it if so, but present it as one input into a judgement rather than as a verdict on the whole.
+
+One thing worth checking before routing a claim here: whether it *contains* a testable claim it is being confused with. "Library A is nicer to use than B" is a preference, but "A needs no adapter for this input while B does" is a fact, and it may be the thing actually in dispute. Sharpening in step 1 is where that gets separated out, and finding a real testable claim underneath is a better outcome than an Ill-posed verdict.
+
+**False green:** a measurable proxy is substituted for an unmeasurable claim, and the proxy's clean result is reported as having settled it.

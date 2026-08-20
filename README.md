@@ -30,8 +30,8 @@ version compatibility, or relative performance gets built on.
 ## What it produces
 
 A saved, re-runnable script; the environment it ran in; verbatim output; and a verdict of
-**Verified**, **Refuted**, **Inconclusive**, or **Ill-posed** — scoped to what was actually
-tested, with the hypothesis restated beside the observation that settled it. See [`examples/`](./examples/) for two full worked cases — a semantic claim and a
+**Verified**, **Refuted**, **Inconclusive**, **Untested**, or **Ill-posed** — scoped to what
+was actually tested, with the hypothesis restated beside the observation that settled it. See [`examples/`](./examples/) for two full worked cases — a semantic claim and a
 performance claim, both refuted.
 
 ## Design
@@ -60,9 +60,14 @@ about what `x` was.
 test, so they can only confirm it. This is the single most common way a verification ends up
 proving nothing.
 
-Beyond that, `Inconclusive` is treated as a legitimate verdict rather than a failure to be
-avoided — the categories where honest verification usually lands there (absence claims,
-thread-safety claims) are exactly the ones where manufactured confidence does the most damage.
+Beyond that, the verdicts that aren't `Verified` are treated as legitimate outcomes rather
+than failures to be avoided. `Inconclusive` is where honest verification lands for absence and
+thread-safety claims — exactly the categories where manufactured confidence does the most
+damage. `Untested` covers the claim that is perfectly empirical but out of reach: real money,
+production access, or a scale you don't have. It carries mandatory work rather than a shrug —
+run the local half, cite the remote half as *sourced* rather than observed, and name the
+smallest real trial that would settle it. Never provision billable infrastructure to remove
+the barrier.
 
 ### Related work
 
@@ -141,9 +146,11 @@ prove-it/
 │   └── marketplace.json                # single-plugin marketplace, source "./"
 ├── skills/
 │   └── prove-it/
-│       ├── SKILL.md                    # procedure, failure modes, report format
+│       ├── SKILL.md                    # triage, procedure, failure modes, report format
 │       └── references/
 │           └── experiment-patterns.md  # per-claim-type experiment design
+├── evals/
+│   └── test-claims.md                  # claims with known-correct verdicts
 └── examples/
     ├── README.md                       # index of worked cases
     ├── utcnow-awareness.md             # semantic claim, refuted
