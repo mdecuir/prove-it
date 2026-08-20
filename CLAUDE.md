@@ -66,9 +66,10 @@ by making it more decisive there.
 - **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
   skill-creator guidance, but never run through the description-tuning loop.
 - **No evals exist.** No `evals/evals.json`, no test prompts, no measured trigger rate.
-- **Only one worked example**, and it's a refutation. There's no example of a verified
-  claim, an inconclusive verdict, or a comparative/performance claim — the categories where
-  the reference file does the most work are the least exercised.
+- **Both worked examples are refutations.** There's still no example of a verified claim or
+  an inconclusive verdict. `examples/reread-cost.md` covers the performance category (and
+  its writeup deliberately keeps both harness bugs visible, because the corrections are the
+  instructive part); a comparative two-library case is still missing.
 
 ## Next steps, roughly in order
 
@@ -115,7 +116,13 @@ repo context for whoever edits the skill, not part of the shipped plugin.
 - `SKILL.md` stays under ~500 lines; depth goes into `references/`.
 - Explain *why* a rule exists rather than issuing bare MUSTs — the skill is read by a model
   that follows reasoning better than commands.
-- Example scripts are real and actually run. The output in `examples/README.md` was captured
-  from a real execution, including an unpredicted deprecation warning that was deliberately
-  kept because it illustrates why raw output precedes interpretation. Don't replace captured
-  output with plausible-looking output.
+- Example scripts are real and actually run. Captured output stays verbatim, including the
+  parts nobody predicted — the deprecation warning in `examples/utcnow-awareness.md` and the
+  odd cheaper-than-parse timing in `examples/reread-cost.md` both survive because they
+  illustrate why raw output precedes interpretation. Don't replace captured output with
+  plausible-looking output.
+
+- `examples/reread_cost.py` needs polars, so it is not runnable from a bare checkout. Its
+  docstring carries the throwaway-venv invocation, per the skill's own step 4. If you re-run
+  it, expect different absolute timings and replace the whole captured block rather than
+  editing numbers inside it.

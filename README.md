@@ -31,7 +31,8 @@ version compatibility, or relative performance gets built on.
 
 A saved, re-runnable script; the environment it ran in; verbatim output; and a verdict of
 **Verified**, **Refuted**, **Inconclusive**, or **Ill-posed** — scoped to what was actually
-tested. See [`examples/`](./examples/) for a full worked case.
+tested. See [`examples/`](./examples/) for two full worked cases — a semantic claim and a
+performance claim, both refuted.
 
 ## Design
 
@@ -144,8 +145,11 @@ prove-it/
 │       └── references/
 │           └── experiment-patterns.md  # per-claim-type experiment design
 └── examples/
-    ├── README.md                       # worked end-to-end case
-    └── utcnow_awareness.py
+    ├── README.md                       # index of worked cases
+    ├── utcnow-awareness.md             # semantic claim, refuted
+    ├── utcnow_awareness.py
+    ├── reread-cost.md                  # performance claim, refuted
+    └── reread_cost.py
 ```
 
 The skill has to live at `skills/<name>/SKILL.md`. A `SKILL.md` at the repo root is not
