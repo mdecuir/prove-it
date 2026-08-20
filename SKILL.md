@@ -1,0 +1,133 @@
+---
+name: prove-it
+description: Settle a claim about how code actually behaves by designing, writing, and running a minimal experiment against the real library — then reporting the result even when it refutes the claim. Use whenever someone says "prove it", "are you sure?", "verify that", "show me", "how do you know", or challenges an assertion about what a standard-library or third-party function returns, raises, defaults to, or how two libraries compare. Also use proactively, without being asked, before relying on any unverified assumption about library behavior, version compatibility, or relative performance where the answer is cheap to settle by running code.
+---
+
+# Prove It
+
+An assertion about library behavior is a report from memory. Memories of API surfaces go stale, blur across adjacent versions, and confabulate details that are plausible rather than true — and they do it most confidently for libraries that are well known, because familiarity is what generates the confidence, not recall accuracy.
+
+This skill replaces the assertion with an experiment. The claim gets restated as something that could be false, an experiment gets designed that could show it false, the code runs against the real library, and the raw output decides.
+
+The load-bearing property is that **the experiment must be able to refute the claim**. An agent testing its own assertion has an obvious pull toward writing the test that passes. Everything below is structured to make that harder.
+
+## What this applies to
+
+Settle by execution: return values, raised exceptions, default arguments, ordering and stability guarantees, mutation vs. copy semantics, encoding and coercion behavior, version compatibility, and relative performance between two concrete options.
+
+Do not use execution for: what the documentation *recommends*, design and style questions, claims about a library's roadmap, or claims about a system you have no access to. Say the claim isn't executable and offer the appropriate alternative — usually a documentation lookup with a citation. A fabricated experiment is far worse than an honest "I can't test that from here."
+
+## Procedure
+
+### 1. Restate the claim as a falsifiable proposition
+
+The original assertion is usually too loose to test. Sharpen it, and show the sharpened version — the user needs to see what is actually about to be tested, because the gap between what was said and what gets tested is where bad verifications hide.
+
+A testable proposition names: the exact call or operation, the exact input, the expected observable, and the environment it's claimed to hold in. "`sorted()` is stable" becomes "`sorted()` in CPython 3.12 preserves the relative order of elements comparing equal under the supplied key."
+
+Behavior claims are always claims about a *(library, version)* pair. If the version is unstated, either pin the one the user's project actually uses or test across the plausible range and say which is which.
+
+If sharpening changes the meaning of the claim, flag it and ask. Quietly testing a weaker proposition than the one asserted is a way of appearing to verify while verifying nothing.
+
+### 2. Commit to a prediction and a falsification condition — before writing any code
+
+Write both, in the response, before the script exists:
+
+- **Prediction:** what the run will output if the claim holds.
+- **Falsification condition:** the specific observable result that would mean the claim is false.
+
+This ordering is the whole mechanism. A prediction recorded after seeing output can be retrofitted to whatever appeared; a prediction recorded before it cannot. It converts "the test passed" into a claim with actual content.
+
+If no result can be named that would refute the proposition, stop. The claim is either vacuous, or it isn't empirical, or it hasn't been sharpened enough yet. Return to step 1 or say so plainly.
+
+### 3. Design the minimal discriminating experiment
+
+- **Exercise the real library.** Import and call the actual thing. A reimplementation, a mock, or a stub tests your model of the library, which is exactly the thing under suspicion. This is the single most common way an experiment ends up proving nothing.
+- **Vary one thing.** For comparison claims, both options run through the same harness on the same inputs, with only the option under comparison differing.
+- **Probe the boundary the claim depends on.** A claim about behavior at a threshold is tested at the threshold, on both sides. A claim that holds only in the easy case is not the claim that was made.
+- **Include the near-miss case.** If the claim is "X raises on empty input," also run the non-empty input. Without it, a script that raises for an unrelated reason looks like confirmation.
+- **Keep it small.** A twenty-line script that the user can read in one pass and re-run themselves is worth more than a thorough harness they have to trust.
+
+Per-claim-type recipes — semantic, comparative, performance, exception, version-compatibility, and absence claims — are in `references/experiment-patterns.md`. Read it when the claim type isn't a straightforward "what does this return."
+
+### 4. Write the script as a standalone, re-runnable artifact
+
+Save it to a file rather than piping it through a shell heredoc. The script *is* the evidence, and evidence that can't be inspected and re-run is just a different flavor of assertion.
+
+Every script prints its own environment first — language version, version of each library under test, platform. A result without its environment stamp is unfalsifiable later, when someone tries to reproduce it on a different machine.
+
+Print observed values. Never let a bare `assert` stand as the result: `assert x == 5` passing tells the reader nothing about what `x` was, and a passing assertion is indistinguishable from an assertion that was never reached. Print the actual observable, then compare.
+
+Install pinned versions into a throwaway environment (`venv`, `npx --yes`, a scratch directory). Do not mutate the user's project environment to run a verification.
+
+### 5. Run it, and show raw output before interpreting it
+
+Paste the actual output. Then interpret. Reversing this order lets the interpretation shape what gets shown, and readers lose the ability to check your reading against the evidence.
+
+If the script errors, that is a result, not a setback to be quietly fixed. Distinguish "the experiment was broken" from "the claim is false" — they look similar from inside and mean opposite things. Fix genuine harness bugs; do not fix a harness until it produces the answer you expected.
+
+### 6. Deliver a verdict
+
+- **Verified** — the observable matched the prediction, under the stated environment. Scope the verdict to what was actually tested. "Verified for CPython 3.12" is honest; "Verified" is usually broader than the evidence.
+- **Refuted** — say so directly and early, especially when the claim being refuted is one you made yourself earlier in the conversation. Name the correction: not just "that was wrong" but what the behavior actually is. This is the case that produces most of the value; treat it as the successful outcome it is, without hedging or burying it under context.
+- **Inconclusive** — a real verdict, not a failure. The experiment ran but doesn't discriminate. State exactly what would resolve it.
+- **Ill-posed** — the claim can't be made falsifiable. Explain what's ambiguous.
+
+### 7. Follow through to the source
+
+A refuted claim usually has descendants. Find them:
+
+- Code already written on the assumption — fix it or flag it.
+- A plan or design decision that rested on it — reopen it.
+- A doc, comment, or memory file that records it — correct it there, or the same wrong claim returns next session.
+
+## Failure modes
+
+These are the ways a verification produces a green result while proving nothing. Check against them before reporting.
+
+| Failure | What it looks like |
+|---|---|
+| Testing the reimplementation | Writing your own version of the function and testing that instead of importing the library |
+| Mocking the thing under test | The mock encodes the assumption, so the test can only confirm it |
+| Assertion without observation | `assert result == expected` passes; the actual value is never printed |
+| No-error means correct | Script exits 0, so the claim is treated as confirmed, though nothing was checked |
+| Version drift | Claim was about v2; the environment silently resolved v3 |
+| The easy case only | The claim is tested where it obviously holds, never at the boundary where it might not |
+| Single-shot benchmark | One timing run, no warmup, no variance — noise reported as a finding |
+| Retrofitted claim | After a refuting result, the claim is restated as something narrower that survives |
+| Absence by failed probe | One probe failed, therefore the feature doesn't exist — see `references/experiment-patterns.md` |
+
+## Report format
+
+```
+## Claim
+[The sharpened, falsifiable proposition]
+
+## Prediction and falsification condition
+Predicted: [what the run should output if true]
+Refuted if: [the specific result that would mean it's false]
+
+## Experiment
+[Path to the script, and one or two sentences on why this design discriminates]
+
+## Environment
+[Language version, library versions, platform — from the script's own output]
+
+## Raw output
+[Verbatim]
+
+## Verdict
+[Verified | Refuted | Inconclusive | Ill-posed] — scoped to what was actually tested.
+[If refuted: what the behavior actually is.]
+
+## Consequences
+[Code, plans, or docs that need correcting. Omit if none.]
+```
+
+For a single quick probe, collapse this — but never drop the falsification condition or the raw output. Those two are what separate this from a confident guess.
+
+## Scope
+
+This version targets standard-library and third-party behavior, where the risk is that the agent's model of someone else's code is wrong.
+
+Claims about code the user controls are a planned extension and the risk profile inverts: the danger is no longer a stale memory but a test that encodes the same misunderstanding as the implementation it's testing. The rule that will matter there is that the test must be derived from the stated requirement, never read off the implementation. Until that's built out, the procedure above still works for user code — just be aware that step 3's "exercise the real library" is doing less protective work.
