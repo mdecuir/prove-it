@@ -68,43 +68,96 @@ that instinct is actively dangerous once a cloud account is in reach.
 
 ## Known weaknesses in the current draft
 
-- **The failure-mode table in `SKILL.md` is reasoned, not observed.** It was written by
-  predicting how verifications go wrong, not by watching them go wrong. Expect some entries
-  to be irrelevant and some real failures to be missing. Running the skill against real
-  claims should reshape this table; treat that as the highest-value next edit.
+- **The failure-mode table in `SKILL.md` is still the predicted one.** Run 1 (2026-08-20)
+  produced the evidence to rewrite it but the rewrite has not been applied — see the pending
+  list below. Four predicted rows were not observed once in twelve runs, and five real failures
+  are missing from it.
 - **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
   skill-creator guidance, but never run through the description-tuning loop.
-- **The test set exists but has never been run.** `evals/test-claims.md` has ten claims with
-  known-correct verdicts spread across all five, including two boundary traps. Nothing has been
-  executed against it, so there is still no measured trigger rate and no observed failure data.
-  It is markdown rather than `evals/**/case.yaml` because `claude plugin eval` is gated behind
-  early access on this account and its schema couldn't be read from the tool; `claude plugin
-  eval init --bare` just prints the gate message.
+- **The test set has been run once, n=1 per case.** `evals/test-claims.md` plus
+  `evals/results-2026-08-20.md`. Nothing in those results is a rate, and the ponytail confound
+  (below) is only partly controlled. It is markdown rather than `evals/**/case.yaml` because
+  `claude plugin eval` is gated behind early access on this account and its schema couldn't be
+  read from the tool; `claude plugin eval init --bare` just prints the gate message.
 - **Both worked examples are refutations.** There's still no example of a verified claim or
   an inconclusive verdict. `examples/reread-cost.md` covers the performance category (and
   its writeup deliberately keeps both harness bugs visible, because the corrections are the
   instructive part); a comparative two-library case is still missing.
 
+## Reproducing a run
+
+The harness is three flags and two gotchas. Both gotchas cost real time in run 1.
+
+```bash
+# marketplace.json MUST be absent from the copy, or --plugin-dir silently loads nothing
+rsync -a --exclude .git --exclude evals <repo>/ /tmp/plugin-only/
+rm /tmp/plugin-only/.claude-plugin/marketplace.json
+
+claude -p --plugin-dir /tmp/plugin-only \
+  --allowedTools Bash Write Read Edit Glob Grep \
+  --output-format stream-json --verbose "<the claim, as a user would say it>"
+```
+
+- **`stream-json` is not optional.** The final message can contain a perfectly ordered report
+  while the transcript shows H₀ was written after the output existed. Only the event stream
+  distinguishes those, and that is the main thing this skill needs measured.
+- **`--permission-mode bypassPermissions` is refused** by the auto-mode classifier. The
+  explicit `--allowedTools` list works.
+- **`CLAUDE_CONFIG_DIR` isolation breaks auth**, so subprocesses inherit the operator's other
+  plugins. On this machine that means `ponytail`, whose "code first, at most three short lines"
+  rule directly contradicts this skill's pre-registration requirement. Prefix a prompt with
+  `normal mode.` to disable it for a control arm.
+- **Neutralize cloud credentials** before the `untested-managed-bulk-load` case. Run 1 verified
+  the neutralization by confirming `aws sts get-caller-identity` returns `NoCredentials` first.
+
 ## Next steps, roughly in order
 
-1. ~~Build a test set of claims deliberately mixing outcomes.~~ Done — `evals/test-claims.md`.
-   The cases that matter most are `inconclusive-itertools-count-threadsafe` (does the skill
-   resist manufacturing a verdict from a hundred green runs?) and the two boundary traps,
-   which resemble a verdict they must not receive.
-2. **Run the skill against them and rewrite the failure-mode table from what actually happens.**
-   This is now the highest-value edit in the repo. The table has grown to sixteen rows, every
-   one of them predicted rather than observed, and four were added with the `Untested` and
-   `Ill-posed` work without a single real run behind them.
-3. Run skill-creator's description optimiser. It needs `claude -p`, which is why it was
-   skipped in the originating session:
-   ```
-   python -m scripts.run_loop --eval-set <trigger-eval.json> --skill-path . \
-     --model <model-id> --max-iterations 5 --verbose
-   ```
-4. Add examples covering a verified verdict and a comparative claim.
-5. Only then consider the user-controlled-code extension (see the Scope section of
-   `SKILL.md`) — the risk profile inverts there and it deserves its own design pass rather
-   than being bolted on.
+Run 1 is done. These are the edits it justified, none of them applied yet; the evidence for
+each is in `evals/results-2026-08-20.md` under the numbered finding cited.
+
+1. **Reword step 2's ordering rule to what it actually protects (finding 1).** It currently says
+   "before writing any code," but the purpose is "before any output exists," and models satisfy
+   the purpose while violating the letter — one run wrote the script, *then* stated H₀, then ran
+   it, which is fine. Worse, three runs emitted the entire report as a single final message with
+   H₀ composed after the output was in view, which the letter of the rule does not catch because
+   the finished document looks correct. Say "before anything runs," and require the
+   pre-registration to be **its own message**, not a section of the final report.
+2. **Rewrite the failure-mode table into two tables (findings 1–3, 8).** Observed, with the case
+   that showed it; and predicted-but-unseen, marked as such. Add rows for: report-in-one-message,
+   vendor facts asserted without citation because triage never ran, and skill not firing at all.
+   Do not delete the four unobserved rows — twelve runs is too few — but stop presenting them as
+   equals of the observed ones.
+3. **Fix the trigger description (findings 2, 3).** It enumerates library and function behaviour,
+   so cost, pricing, infrastructure, and capacity claims do not fire it, and neither do
+   preference claims that need an `Ill-posed` verdict. Both reproduced with ponytail off, so this
+   is the description and not the confound. This is also CLAUDE.md's long-standing
+   description-tuning item — do them together.
+4. **Split closed from open surfaces in the absence-claims reference (finding 5).** A stdlib
+   module whose source you can read end to end is not the same problem as a service or a library
+   with dynamic attributes. `Verified` is reachable for the first by enumerate-and-read; only the
+   second is inherently `Inconclusive`. Run 1's `zipfile` case did this correctly and the
+   reference did not describe it.
+5. Re-run the set after 1–4 to see which findings move, and add the missing comparative and
+   verified worked examples. `inconclusive-itertools-count-threadsafe` is a candidate worked
+   example in its own right (finding 7) — it is the best run of the set and the only observed
+   evidence that the concurrency guidance works.
+6. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
+   the risk profile inverts there and it deserves its own design pass rather than being bolted
+   on.
+### On the description optimiser
+
+Folded into step 3 above. Note that skill-creator is **not actually installed** on this machine
+— `~/.claude/skills/skill-creator` is a dangling symlink to `~/.agents/skills/skill-creator`,
+which does not exist. Its eval-set schema could not be read, so the loop below is from the
+originating session's notes rather than verified here:
+
+```
+python -m scripts.run_loop --eval-set <trigger-eval.json> --skill-path . \
+  --model <model-id> --max-iterations 5 --verbose
+```
+
+The trigger cases run 1 established as failing (cost/infrastructure, pure preference) are the
+ones any optimiser run should be seeded with.
 
 ## Packaging
 

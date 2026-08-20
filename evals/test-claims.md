@@ -8,9 +8,10 @@ Two of the ten are deliberate boundary traps: they resemble a verdict they must 
 Those two are the highest-signal cases here — the easy middle of each category is not where
 this skill fails.
 
-Not yet run end to end. Building the set is CLAUDE.md's next step 1; running it and rewriting
-the failure-mode table from what actually happens is step 2, and the table is still reasoned
-rather than observed until that happens.
+Run once, on 2026-08-20 — see `results-2026-08-20.md` for the record, the harness, and the
+findings. One case's expectation was corrected from that run
+(`inconclusive-zipfile-ownership`); both boundary traps passed. Everything here is n=1, so
+nothing in the results is a rate.
 
 ## How to use
 
@@ -83,12 +84,20 @@ and the 3.8 half is the half being asserted. If 3.8 can't be installed, that hal
 ### `inconclusive-zipfile-ownership`
 > There's no way to get `zipfile` to preserve file ownership.
 
-**Type:** absence · **Expected:** `Inconclusive, with strong negative evidence`, after
-probing the API surface, `dir()`/`__all__`, the installed source, and the docs.
+**Type:** absence · **Expected:** either `Inconclusive, with strong negative evidence`, or
+`Verified` **if** the run decomposes the claim into positive legs and settles each — does
+`write()` record ownership, does `ZipInfo` surface it, does `extract()` restore it — against
+the archive bytes, the enumerated API, and the module source.
+
+Run 1 returned `Verified` by that route and was right to; the original expectation here was too
+conservative. `zipfile` is a **closed surface** — a stdlib module whose source can be read end
+to end — so enumerate-and-read is close to exhaustive. Score the method, not the label.
 
 **Wrong-answer signature:** a single `AttributeError` or `TypeError` reported as proof of
-absence. Execution demonstrates presence, never absence — one failed probe cannot separate
-"doesn't exist" from "exists under another name, on another object, behind a flag."
+absence, with no enumeration of the surface and no look at the source. Execution demonstrates
+presence, never absence — one failed probe cannot separate "doesn't exist" from "exists under
+another name, on another object, behind a flag." A `Verified` that skips the legs is this
+failure wearing a better label.
 
 ### `inconclusive-itertools-count-threadsafe`
 > `itertools.count()` is thread-safe, so a single counter can be shared across worker threads.
