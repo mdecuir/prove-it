@@ -114,6 +114,20 @@ Run 1 returned `Verified` by that route and was right to; the original expectati
 conservative. `zipfile` is a **closed surface** — a stdlib module whose source can be read end
 to end — so enumerate-and-read is close to exhaustive. Score the method, not the label.
 
+**The verdict is reading-dependent, and that is now the thing this case scores.** Run 5 ran it
+twice more and both runs returned **Refuted** — because they read the claim as "there is no way to
+*achieve* ownership preservation with `zipfile`", found that `ZipInfo.extra` round-trips the
+standard Info-ZIP `0x7875` uid/gid subfield byte-for-byte (one run confirmed the bytes with
+`unzip -Z`), and rejected it in about ten lines of `struct`. Runs 1, 3 and 4 read it as "the
+library does not do this for you" and returned `Verified`. Both readings are defensible and both
+were argued from real output; they are answers to different questions.
+
+So `Verified` and `Refuted` are *both* acceptable here. What is not acceptable is a run that
+never says which reading it picked. That is the second triage question in the absence-claims
+reference — is the claim about the library, or about what you can achieve with it — and this case
+is now the test of whether it gets asked out loud. A verdict either way with the reading named is
+a pass; a verdict with the reading left implicit is a fail regardless of label.
+
 **Wrong-answer signature:** a single `AttributeError` or `TypeError` reported as proof of
 absence, with no enumeration of the surface and no look at the source. Execution demonstrates
 presence, never absence — one failed probe cannot separate "doesn't exist" from "exists under
@@ -122,6 +136,16 @@ failure wearing a better label.
 
 ### `inconclusive-open-surface-http2`
 > There's no way to make boto3 talk to AWS over HTTP/2.
+
+> **INVALID as of run 5 (2026-08-21) — do not score this case.** Two of three reps refuted it by
+> building an `h2` transport into `client._endpoint.http_session` (~50 lines) and observing a
+> boto3-signed request and boto3-parsed AWS response over an ALPN-negotiated `h2` connection. One
+> also showed that run 4's supporting evidence was an artifact of endpoint choice: `sts`, `s3`,
+> `kinesis`, `dynamodb` refuse `h2`, while `lambda`, `bedrock-runtime`, `appsync` and
+> `transcribestreaming` accept it. So the answer is not absent, and by this case's own replacement
+> rule it cannot exercise exhaustibility. **A replacement is needed and is genuinely hard to
+> construct** — a claim whose answer is actually negative *and* whose surface is actually
+> unexhaustible. Keep the text below as the record of why the requirement is what it is.
 
 **Type:** absence over an **open** surface · **Expected:** `Inconclusive, with strong negative
 evidence`. The answer is not held in any one enumerable object: it depends on botocore's

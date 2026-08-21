@@ -33,9 +33,14 @@ Invoke it by name:
 ```
 
 Automatic triggering — the skill firing on its own when it sees an unverified assumption — is
-intended but **not yet dependable**. Measured across two runs of the test set, the same prompt
-invoked the skill 3 times out of 3 in one session and 0 out of 4 in another, including a prompt
-ending in the literal words "Prove it." The description lists that as its first trigger phrase.
+intended but **not yet dependable**. Measured across four runs, the same prompt invoked the skill
+3 times out of 3 in one session and 0 out of 4 in another, and a controlled A/B in run 5 fired
+2 of 12 — including 0 of 4 for a prompt ending in the literal words "Prove it.", which the
+description lists as its first trigger phrase.
+
+One plausible cause was ruled out rather than assumed: the skill's YAML frontmatter had never
+parsed (a description containing `": "` in a plain scalar), and fixing it changed nothing —
+1 of 6 with it broken, 1 of 6 with it fixed. Cause still unknown.
 
 Until that is fixed, treat proactive firing as a bonus rather than a feature, and name the skill
 when you want it. Progress is tracked in `evals/` and `CLAUDE.md`.

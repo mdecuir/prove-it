@@ -94,8 +94,8 @@ that instinct is actively dangerous once a cloud account is in reach.
   (`count-thread-safety.md`). The concurrency case was *expected* to land Inconclusive and landed
   Refuted instead, by finding a real race — a better run and a worse example of the verdict the
   skill most needs to demonstrate. Run 4's `inconclusive-open-surface-http2` is the strongest
-  candidate: it split its verdict (`Verified` for the supported surface, `Inconclusive` on the
-  absolute claim) and justified the split by the surface being open.
+  candidate — **retracted.** Run 5 refuted that claim outright, so the run reads as thorough and
+  is wrong; see run 5, arm 3b. There is currently no candidate.
 
 ## Reproducing a run
 
@@ -223,14 +223,39 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
      named as closed and the module source was never read. n=2, inconclusive.
    - Predicted-table rows stayed empty across nine more executing runs (24 total).
 
-6. **Verify the step-2 "not its own turn" wording.** Cheapest real measurement available: re-run
-   the three cases that stalled, several reps each, against the current skill. It is a single
-   binary observable (did anything execute after the pre-registration message) and the prior is
-   3/12 stalling.
+6. ~~Verify the step-2 "not its own turn" wording.~~ **Done — run 5, 9 of 9.** Three stalled
+   cases × three reps: every run pre-registered as its own message *and* executed. Zero stalls
+   against a prior of 3/12. The observable was fixed before the runs and read off the event stream,
+   not the report.
 
-7. Add an `Inconclusive` worked example — `inconclusive-open-surface-http2` from run 4 is the
-   candidate — and cases that probe the hallucinated-parameter failure directly.
-8. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
+   Run 5 also fixed two things and closed neither question behind them:
+   - **`SKILL.md` frontmatter had never parsed.** The description was a plain YAML scalar
+     containing `": "`, so `claude plugin validate` reports the whole block dropped. Fixed with a
+     `>-` block scalar. **It is not the trigger bug** — an A/B differing only in frontmatter
+     parseability fired 1 of 6 either way, and the skill was invocable by name in both arms, so the
+     runtime is more lenient than the validator says. Triggering is still 2 of 12 and still open.
+   - **`inconclusive-zipfile-ownership` is reading-dependent.** Both run-5 reps returned `Refuted`
+     by reading the claim as "can you achieve this with the library" and round-tripping uid/gid
+     through `ZipInfo.extra`'s Info-ZIP `0x7875` field. Runs 1/3/4 read it as "does the library do
+     it for you" and returned `Verified`. The case now accepts either verdict and scores whether the
+     run *names the reading*. Do not re-flatten it to one expected label.
+
+7. **Whether run 3's explicit surface triage is typical is still open**, and the zipfile case can
+   no longer test it — its ambiguity is now the thing it measures. That question needs a
+   closed-surface absence claim with only one sensible reading.
+
+8. Make automatic invocation dependable, or decide it isn't worth it. Two of twelve across run 5's
+   arms; `"Prove it."` fired 0 of 4 again. Needs a trigger-only eval — many prompts, several reps,
+   scored purely on whether the skill loads. Do not fold it into `test-claims.md`.
+
+9. Add an `Inconclusive` worked example, and cases that probe the hallucinated-parameter failure
+   directly. **`inconclusive-open-surface-http2` is no longer the candidate** — run 5 refuted the
+   claim by building an h2 transport in ~50 lines, and showed run 4's supporting evidence was an
+   artifact of sampling three endpoints that don't offer h2. That case is marked invalid and needs a
+   replacement: a claim whose answer is *actually* absent over a surface that is *actually*
+   unexhaustible. Both halves at once is the hard part.
+
+10. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
    the risk profile inverts there and it deserves its own design pass rather than being bolted
    on.
 
@@ -265,6 +290,12 @@ both are easy to break:
   Root `SKILL.md` only works for the older bare-skill-directory convention.
 - **Versions in `plugin.json` and the `marketplace.json` entry must agree.**
   `claude plugin tag` refuses to cut a release tag when they drift, so bump both.
+
+`claude plugin validate .claude-plugin/plugin.json` also validates the **skill**, and that is the
+only way the skill's frontmatter gets checked — validating the marketplace manifest does not. Run 5
+found the frontmatter had never parsed (a plain YAML scalar containing `": "`), which means it had
+been shipping broken since the description rewrite. The description now lives in a `>-` block
+scalar; keep it there, because the description is prose and prose acquires colons.
 
 `claude plugin validate .` checks the manifests. It validates whichever manifest it finds
 first, so point it at `.claude-plugin/plugin.json` explicitly to check that one. It warns that

@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "prove-it",
-  "version": "0.1.0",
-  "description": "Settle a claim about how code actually behaves by designing and running a minimal experiment against the real library, then reporting the result even when it refutes the claim.",
+  "version": "0.2.0",
+  "description": "Classify a claim about how code or a system behaves, then settle it: run a minimal experiment against the real library when it can be run from here, mark it Untested when the experiment is real but out of reach (cost, scale, access), or Ill-posed when no observation could settle it \u2014 and report the result even when it refutes the claim.",
   "author": {
     "name": "Mike Decuir",
     "email": "mike.decuir@adaptx.com"

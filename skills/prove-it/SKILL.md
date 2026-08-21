@@ -1,6 +1,18 @@
 ---
 name: prove-it
-description: Settle a claim about how code or a system actually behaves, instead of asserting it again. First classify the claim, then act: testable here (design and run a minimal experiment against the real library, and report the result even when it refutes the claim), empirical but out of reach because of cost, scale, production access, or credentials (verdict Untested — run whatever local half exists, cite the rest as sourced, never provision billable infrastructure), or not empirical at all (verdict Ill-posed — say so, then answer the real question). Use when someone says "prove it", "are you sure?", "verify that", "show me", "how do you know", "test that", or disputes an assertion about what a function returns or raises, what a default is, how two libraries compare, what a version changed, whether something is thread-safe, how fast or how memory-hungry something is, or what an infrastructure or cloud operation will cost. Also use proactively, before building on any unverified assumption about library behavior, version compatibility, performance, capacity, or cost — including assumptions you stated yourself a moment ago.
+description: >-
+  Settle a claim about how code or a system actually behaves, instead of asserting it again. First
+  classify the claim, then act: testable here (design and run a minimal experiment against the real
+  library, and report the result even when it refutes the claim), empirical but out of reach because
+  of cost, scale, production access, or credentials (verdict Untested — run whatever local half
+  exists, cite the rest as sourced, never provision billable infrastructure), or not empirical at all
+  (verdict Ill-posed — say so, then answer the real question). Use when someone says "prove it", "are
+  you sure?", "verify that", "show me", "how do you know", "test that", or disputes an assertion about
+  what a function returns or raises, what a default is, how two libraries compare, what a version
+  changed, whether something is thread-safe, how fast or how memory-hungry something is, or what an
+  infrastructure or cloud operation will cost. Also use proactively, before building on any unverified
+  assumption about library behavior, version compatibility, performance, capacity, or cost — including
+  assumptions you stated yourself a moment ago.
 ---
 
 # Prove It
