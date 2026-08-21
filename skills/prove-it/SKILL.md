@@ -82,6 +82,8 @@ Stating H₀ in its strongest form is the anti-retrofit device. A hedged null su
 
 If no observable can be named that would reject H₀, stop. The claim is either vacuous, or not empirical, or not yet sharpened. Return to step 1 or say so plainly.
 
+**Its own message, not its own turn.** Send the pre-registration and then keep going — the first execution follows immediately, in the same turn. Do not close on the pre-registration and wait, and do not ask whether to proceed. A text message with no tool call after it *ends the turn*, which hands the experiment back to the user as a question they did not ask. Three of twelve runs in run 4 did exactly that: a well-formed H₀/H₁/falsification message, correct in every respect, and then nothing ran. The pre-registration is a commitment made in passing, not a checkpoint. Ending the message with "Now running." and the first tool call in the same turn is the shape that works.
+
 ### 3. Design the minimal discriminating experiment
 
 - **Exercise the real library.** Import and call the actual thing. A reimplementation, a mock, or a stub tests your model of the library, which is exactly the thing under suspicion. This is the single most common way an experiment ends up proving nothing.
@@ -157,12 +159,15 @@ Seen in real runs of this skill against `evals/test-claims.md`. The case column 
 | The skill never loads | Cost, capacity and preference claims do not trigger it, and triggering is unreliable even for prompts containing its own verbatim trigger phrases. A procedure that is not loaded cannot be observed following or breaking its rules | run 1 findings 2–3; run 2 (3/3 → 0/4) |
 | The instrument was wrong, not the result | A verification whose *measurement* is broken while its subject is fine. Three in this skill's own evaluation: a regex that scored formatting instead of substance and reported failures that had not happened; an unpinned `--model` that left two runs non-comparable; a detector keyed on a tool call that slash invocation never emits | `evals/results-2026-08-21.md` |
 | Version drift | Claim was about v2; the environment silently resolved v3. Observed in this skill's own harness rather than in a run — two runs were compared before anyone checked they used the same model | run 2 harness |
+| Pre-registration ends the turn | H₀, H₁ and the falsification condition are sent correctly as their own message — and nothing runs, because a text message with no tool call after it *is* the end of a turn. The commitment gets made and the experiment gets handed back as a question nobody asked. Three of twelve runs, one of them closing with the words "Running now." | `verified-orjson-datetime`, `inconclusive-zipfile-ownership`, `inconclusive-open-surface-http2` (run 4) |
+| Raw output paraphrased instead of printed | The verdict says "Observed: all four types raised `TypeError`" and the script's actual printed lines never appear. A `Verified` whose evidence is a summary of the evidence, in the run that otherwise followed the procedure most cleanly | `verified-orjson-datetime` (run 4) |
+| Hallucinated follow-up turn | The report explains that H₀ has no truth value until a vendor and tier are named, then appends a fabricated user message supplying them: `user Neptune, provisioned db.r5.12xlarge, us-east-1. Now settle it.` It did not act on it. One step further along, the missing input gets invented and the claim gets "settled" against it | `untested-managed-bulk-load` (run 4) |
 
 ### Predicted, not yet observed
 
-Reasoned about rather than witnessed. None occurred in the fifteen runs that both engaged the
+Reasoned about rather than witnessed. None occurred in the twenty-four runs that both engaged the
 skill and executed something — the only population in which they *could* have been observed, out
-of twenty-five runs total. That is too small a sample to delete them, and large enough that they
+of thirty-seven runs total. That is too small a sample to delete them, and large enough that they
 should stop being presented as peers of the rows above.
 
 Several are actively contradicted by what runs did instead. Controls appeared unprompted and

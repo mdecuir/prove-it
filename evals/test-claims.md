@@ -8,10 +8,14 @@ Two of the ten are deliberate boundary traps: they resemble a verdict they must 
 Those two are the highest-signal cases here — the easy middle of each category is not where
 this skill fails.
 
-Run once, on 2026-08-20 — see `results-2026-08-20.md` for the record, the harness, and the
-findings. One case's expectation was corrected from that run
-(`inconclusive-zipfile-ownership`); both boundary traps passed. Everything here is n=1, so
-nothing in the results is a rate.
+Run twice: 2026-08-20 (`results-2026-08-20.md`) and 2026-08-21 (`results-2026-08-21.md`, run 4 —
+the full set, explicit invocation, model pinned, after skill edits 1–4). Run 4 landed the expected
+verdict on all twelve and passed both boundary traps, and still turned up four failures *inside*
+passing runs — which is why the wrong-answer signature is scored and not just the label.
+
+Everything here is n=1 per case. Nothing in either record is a rate. One case's expectation was
+corrected from run 1 (`inconclusive-zipfile-ownership`) and one case was replaced after run 3
+(`inconclusive-open-surface-http2`); both survived run 4.
 
 ## How to use
 

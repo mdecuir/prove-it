@@ -75,21 +75,27 @@ that instinct is actively dangerous once a cloud account is in reach.
 
 ## Known weaknesses in the current draft
 
-- **The failure-mode table in `SKILL.md` is still the predicted one.** Run 1 (2026-08-20)
-  produced the evidence to rewrite it but the rewrite has not been applied — see the pending
-  list below. Four predicted rows were not observed once in twelve runs, and five real failures
-  are missing from it.
+- **`Untested` is the least-exercised verdict.** One case, one run each. Run 4's
+  `untested-managed-bulk-load` is the best instance of it so far *and* the one that hallucinated a
+  user turn supplying the vendor and tier it had just declared missing. That failure needs its own
+  cases: a claim where the missing parameter is tempting to invent is a different test from a claim
+  that is merely expensive.
 - **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
   skill-creator guidance, but never run through the description-tuning loop.
-- **The test set has been run once, n=1 per case.** `evals/test-claims.md` plus
-  `evals/results-2026-08-20.md`. Nothing in those results is a rate, and the ponytail confound
-  (below) is only partly controlled. It is markdown rather than `evals/**/case.yaml` because
+- **The test set has been run twice, n=1 per case each time.** `evals/test-claims.md` plus
+  `evals/results-2026-08-20.md` and `evals/results-2026-08-21.md` (runs 2–4). Run 4 swept all
+  twelve on verdict; nothing in that is a rate, and the ponytail confound (below) is uncontrolled
+  in run 4 — ponytail was active in every run, visibly influencing report endings without
+  suppressing anything. It is markdown rather than `evals/**/case.yaml` because
   `claude plugin eval` is gated behind early access on this account and its schema couldn't be
   read from the tool; `claude plugin eval init --bare` just prints the gate message.
-- **Both worked examples are refutations.** There's still no example of a verified claim or
-  an inconclusive verdict. `examples/reread-cost.md` covers the performance category (and
-  its writeup deliberately keeps both harness bugs visible, because the corrections are the
-  instructive part); a comparative two-library case is still missing.
+- **No worked example of an `Inconclusive` or `Untested` verdict.** Four examples now, covering
+  semantic, performance, comparative (`orjson-datetime.md`, the one **Verified**) and concurrency
+  (`count-thread-safety.md`). The concurrency case was *expected* to land Inconclusive and landed
+  Refuted instead, by finding a real race — a better run and a worse example of the verdict the
+  skill most needs to demonstrate. Run 4's `inconclusive-open-surface-http2` is the strongest
+  candidate: it split its verdict (`Verified` for the supported surface, `Inconclusive` on the
+  absolute claim) and justified the split by the surface being open.
 
 ## Reproducing a run
 
@@ -116,6 +122,8 @@ claude -p --plugin-dir /tmp/plugin-only --model claude-opus-5 \
   `normal mode.` to disable it for a control arm.
 - **Neutralize cloud credentials** before the `untested-managed-bulk-load` case. Run 1 verified
   the neutralization by confirming `aws sts get-caller-identity` returns `NoCredentials` first.
+- **Wrap each call in `caffeinate -i`.** Two run-4 calls died to `API Error: Your computer went
+  to sleep mid-response`, which surfaces as a truncated report rather than a crash.
 - **Pin `--model`.** Runs 1 and 2 did not, which left the two non-comparable until the model was
   recovered from `modelUsage` in the transcripts after the fact. That is the *version drift* row
   of the skill's own failure table, committed twice in the skill's own evaluation.
@@ -190,11 +198,39 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
    **Do not flatten this back into "absence claims are always Inconclusive."** The load-bearing
    decision above was reworded to match; over-conservatism here was a real defect that a real run
    exposed.
-5. Re-run the set after 1–4 to see which findings move, and add the missing comparative and
-   verified worked examples. `inconclusive-itertools-count-threadsafe` is a candidate worked
-   example in its own right (finding 7) — it is the best run of the set and the only observed
-   evidence that the concurrency guidance works.
-6. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
+5. ~~Re-run the set after 1–4; add the missing comparative and verified worked examples.~~
+   **Done — run 4, 2026-08-21, `evals/results-2026-08-21.md`.** All twelve cases, explicit
+   invocation, model pinned, ponytail active throughout. Twelve of twelve on the expected verdict,
+   both boundary traps passed, $8.10 for the pass.
+
+   Two worked examples added: `examples/orjson-datetime.md` (comparative, **Verified** — the first
+   surviving claim in the set) and `examples/count-thread-safety.md` (concurrency, **Refuted** by
+   139,640 duplicates on the `PyNumber_Add` path, after three harness defects each caught by the
+   positive control).
+
+   Findings that moved:
+   - Pre-registration held in 9 of 9 executing runs. Run 1's "whole report in one closing message"
+     did not recur once.
+   - **New failure, and the important one: three of twelve runs ended the turn on the
+     pre-registration and never ran anything.** A text message with no following tool call *is* the
+     end of a turn. `SKILL.md` step 2 now has an explicit "Its own message, not its own turn"
+     paragraph. **Not yet verified** — the three were re-run before that wording existed.
+   - Three more observed rows added to the failure table: turn-ending pre-registration, raw output
+     paraphrased instead of printed (`verified-orjson-datetime`), and a **hallucinated user turn**
+     (`untested-managed-bulk-load` invented the vendor and tier it had just said were missing).
+   - The open-surface case works as designed and is the best run on the set.
+   - The closed-surface case regressed relative to run 3: right answer, but the surface was never
+     named as closed and the module source was never read. n=2, inconclusive.
+   - Predicted-table rows stayed empty across nine more executing runs (24 total).
+
+6. **Verify the step-2 "not its own turn" wording.** Cheapest real measurement available: re-run
+   the three cases that stalled, several reps each, against the current skill. It is a single
+   binary observable (did anything execute after the pre-registration message) and the prior is
+   3/12 stalling.
+
+7. Add an `Inconclusive` worked example — `inconclusive-open-surface-http2` from run 4 is the
+   candidate — and cases that probe the hallucinated-parameter failure directly.
+8. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
    the risk profile inverts there and it deserves its own design pass rather than being bolted
    on.
 
