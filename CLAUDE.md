@@ -28,10 +28,16 @@ contradicts what the agent said a moment ago.
 
 Three, in descending order of how much the skill depends on them:
 
-1. **H₀ and its falsification condition committed before the code exists.** The core problem
-   is that an agent verifying its own claim is pulled toward writing the test that passes. A
-   prediction recorded after seeing output can be retrofitted; one recorded before cannot. If
-   this rule erodes, the rest of the skill is theatre.
+1. **H₀ and its falsification condition committed, as their own message, before anything runs.**
+   The core problem is that an agent verifying its own claim is pulled toward writing the test
+   that passes. A prediction recorded after seeing output can be retrofitted; one recorded before
+   cannot. If this rule erodes, the rest of the skill is theatre.
+
+   The wording matters and was corrected once already. "Before the code exists" is the wrong line
+   — drafting a script then pre-registering before executing it is fine. And a Hypotheses
+   *section* in the finished report proves nothing about when it was written, which is how run 1
+   produced three reports that looked exemplary and were composed backwards. The rule has to be
+   about message order, because that is the only part of it that is observable.
 
    The direction of H₀ is itself load-bearing and easy to "fix" wrongly: **H₀ is the claim**,
    not the statistical no-effect null. Flipping it to convention would put the agent's
@@ -93,7 +99,7 @@ The harness is three flags and two gotchas. Both gotchas cost real time in run 1
 rsync -a --exclude .git --exclude evals <repo>/ /tmp/plugin-only/
 rm /tmp/plugin-only/.claude-plugin/marketplace.json
 
-claude -p --plugin-dir /tmp/plugin-only \
+claude -p --plugin-dir /tmp/plugin-only --model claude-opus-5 \
   --allowedTools Bash Write Read Edit Glob Grep \
   --output-format stream-json --verbose "<the claim, as a user would say it>"
 ```
@@ -109,29 +115,51 @@ claude -p --plugin-dir /tmp/plugin-only \
   `normal mode.` to disable it for a control arm.
 - **Neutralize cloud credentials** before the `untested-managed-bulk-load` case. Run 1 verified
   the neutralization by confirming `aws sts get-caller-identity` returns `NoCredentials` first.
+- **Pin `--model`.** Runs 1 and 2 did not, which left the two non-comparable until the model was
+  recovered from `modelUsage` in the transcripts after the fact. That is the *version drift* row
+  of the skill's own failure table, committed twice in the skill's own evaluation.
+- **Invocation is unreliable, so n=1 proves nothing about triggering.** The same prompt fired the
+  skill 3/3 in run 1 and 0/4 in run 2. Any claim about whether a description change works needs
+  at least two reps per case and a same-conditions arm with the old description.
 
 ## Next steps, roughly in order
 
-Run 1 is done. These are the edits it justified, none of them applied yet; the evidence for
-each is in `evals/results-2026-08-20.md` under the numbered finding cited.
+Run 1 is done. These are the edits it justified; the evidence for each is in
+`evals/results-2026-08-20.md` under the numbered finding cited. Item 1 is applied, 2–4 are not.
 
-1. **Reword step 2's ordering rule to what it actually protects (finding 1).** It currently says
-   "before writing any code," but the purpose is "before any output exists," and models satisfy
-   the purpose while violating the letter — one run wrote the script, *then* stated H₀, then ran
-   it, which is fine. Worse, three runs emitted the entire report as a single final message with
-   H₀ composed after the output was in view, which the letter of the rule does not catch because
-   the finished document looks correct. Say "before anything runs," and require the
-   pre-registration to be **its own message**, not a section of the final report.
+1. ~~Reword step 2's ordering rule to what it actually protects (finding 1).~~ **Done and
+   verified.** Step 2 is now "before anything runs" plus an explicit "as its own message"
+   requirement, argued from observability rather than discipline: a Hypotheses *section* asserts
+   when it was written and cannot be checked, while a message ahead of the first run demonstrates
+   it. The report format says the Hypotheses block is copied from that message, and
+   `examples/README.md` warns that both worked examples are single documents and must not be read
+   as transcripts.
+
+   Verified in run 2 under explicit invocation: 4 of 4 runs pre-registered before writing or
+   running anything, against 3 of 9 composing H₀ after the output in run 1. n=4, one claim type
+   — the mechanism works, the effect size is unknown.
 2. **Rewrite the failure-mode table into two tables (findings 1–3, 8).** Observed, with the case
    that showed it; and predicted-but-unseen, marked as such. Add rows for: report-in-one-message,
    vendor facts asserted without citation because triage never ran, and skill not firing at all.
    Do not delete the four unobserved rows — twelve runs is too few — but stop presenting them as
    equals of the observed ones.
-3. **Fix the trigger description (findings 2, 3).** It enumerates library and function behaviour,
-   so cost, pricing, infrastructure, and capacity claims do not fire it, and neither do
-   preference claims that need an `Ill-posed` verdict. Both reproduced with ponytail off, so this
-   is the description and not the confound. This is also CLAUDE.md's long-standing
-   description-tuning item — do them together.
+3. ~~Fix the trigger description (findings 2, 3).~~ **Rewritten, and then descoped.** The old
+   description promised "designing, writing, and running a minimal experiment," so a claim that
+   cannot be run read as out of scope — triage, `Untested`, and `Ill-posed` were never advertised
+   in the one string that decides invocation. The new description leads with classification and
+   names all three routes, and fired 4/4 where the old one had been 0/2 on cost claims.
+
+   **But it is not established as the fix**, and triggering is no longer in scope for the evals.
+   An isolation arm (old description, model pinned) fired 1 of 2, which against 2 of 2 is not a
+   result — and two variables had changed at once anyway. Automatic firing proved unreliable
+   enough (3/3 in run 1, 0/4 in run 2, including a prompt ending in the literal words "Prove it.")
+   that it was blocking every other measurement. `evals/test-claims.md` and the README now require
+   explicit `/prove-it` invocation, and proactive firing is documented as intended but
+   undependable.
+
+   **Still open as its own question:** make automatic invocation dependable. It needs a
+   trigger-only eval — many prompts, several reps each, scored purely on whether the skill loads —
+   which is a different instrument from `test-claims.md`. Do not fold it back in.
 4. **Split closed from open surfaces in the absence-claims reference (finding 5).** A stdlib
    module whose source you can read end to end is not the same problem as a service or a library
    with dynamic attributes. `Verified` is reachable for the first by enumerate-and-read; only the
@@ -144,6 +172,7 @@ each is in `evals/results-2026-08-20.md` under the numbered finding cited.
 6. Only then consider the user-controlled-code extension (see the Scope section of `SKILL.md`) —
    the risk profile inverts there and it deserves its own design pass rather than being bolted
    on.
+
 ### On the description optimiser
 
 Folded into step 3 above. Note that skill-creator is **not actually installed** on this machine

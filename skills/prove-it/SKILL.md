@@ -1,6 +1,6 @@
 ---
 name: prove-it
-description: Settle a claim about how code actually behaves by designing, writing, and running a minimal experiment against the real library — then reporting the result even when it refutes the claim. Use whenever someone says "prove it", "are you sure?", "verify that", "show me", "how do you know", or challenges an assertion about what a standard-library or third-party function returns, raises, defaults to, or how two libraries compare. Also use proactively, without being asked, before relying on any unverified assumption about library behavior, version compatibility, or relative performance where the answer is cheap to settle by running code.
+description: Settle a claim about how code or a system actually behaves, instead of asserting it again. First classify the claim, then act: testable here (design and run a minimal experiment against the real library, and report the result even when it refutes the claim), empirical but out of reach because of cost, scale, production access, or credentials (verdict Untested — run whatever local half exists, cite the rest as sourced, never provision billable infrastructure), or not empirical at all (verdict Ill-posed — say so, then answer the real question). Use when someone says "prove it", "are you sure?", "verify that", "show me", "how do you know", "test that", or disputes an assertion about what a function returns or raises, what a default is, how two libraries compare, what a version changed, whether something is thread-safe, how fast or how memory-hungry something is, or what an infrastructure or cloud operation will cost. Also use proactively, before building on any unverified assumption about library behavior, version compatibility, performance, capacity, or cost — including assumptions you stated yourself a moment ago.
 ---
 
 # Prove It
@@ -58,21 +58,27 @@ Behavior claims are always claims about a *(library, version)* pair. If the vers
 
 If sharpening changes the meaning of the claim, flag it and ask. Quietly testing a weaker proposition than the one asserted is a way of appearing to verify while verifying nothing.
 
-### 2. State the null hypothesis, its rival, and the falsification condition — before writing any code
+### 2. State the null hypothesis, its rival, and the falsification condition — before anything runs
 
-Write all three, in the response, before the script exists:
+Send these three **as their own message**, before the first execution:
 
 - **H₀ (null hypothesis):** the claim, in the strongest form it will bear. This is the proposition the experiment exists to prove false.
 - **H₁ (rival):** the most plausible thing that is true instead, if H₀ falls.
 - **Falsification condition:** the specific observable that would reject H₀.
+
+That is two requirements, and the second is the one that quietly disappears.
+
+**Before anything runs.** Not "before writing any code" — drafting the script and then pre-registering before you execute it is fine, because nothing has been observed yet. What must never happen is a prediction composed with output already in view. A prediction recorded after seeing output can be retrofitted to whatever appeared; one recorded before it cannot, and that difference is what converts "the test passed" into a statement with content.
+
+**As its own message.** A Hypotheses *section* inside the final report is not evidence of pre-registration. It is an assertion about when something was written, and it cannot be checked — which is exactly the kind of thing this skill refuses to accept anywhere else. Only its position in the transcript, ahead of the first run, makes the ordering observable. A skill built on "don't tell me, show me" cannot make its own central guarantee unfalsifiable.
+
+This failure is observed, not hypothesised. Run against its own test set, three of nine runs reasoned silently, executed, and emitted a single closing message containing the whole report — H₀, prediction, raw output, verdict — correctly ordered on the page and composed in the wrong order. The documents looked exemplary. Nothing in the finished artifact could have revealed it; only the transcript could. See `evals/results-2026-08-20.md`, finding 1.
 
 H₀ here is the claim itself, not the statistical "no effect" default. The inversion is deliberate and load-bearing: an experiment that sets out to reject its own assertion is working against the agent's bias, whereas one that sets out to reject a boring null is working with it. Keep the claim on trial. (For performance and comparative claims the claim *is* the effect, so H₀ is "A is faster than B by margin M" and H₁ is "the difference sits inside run-to-run variance." Same rule, and it is what gives the variance requirement in `references/experiment-patterns.md` its teeth.)
 
 Naming H₁ is what makes an experiment *discriminating* rather than merely confirming. A wrong model of a function usually agrees with the right one on ordinary inputs and diverges only at the edges, so the input worth running is the one that separates H₀ from H₁ — not the one that shows H₀ working. "`str.strip()` takes a set of characters" has the rival "it takes a substring," and the two agree on nearly every input a confirming test would reach for.
 
 Stating H₀ in its strongest form is the anti-retrofit device. A hedged null survives anything, and if a refuting result later prompts a narrower claim, the narrowing is visibly a *different* H₀ rather than the same one clarified.
-
-This ordering is the whole mechanism. A prediction recorded after seeing output can be retrofitted to whatever appeared; one recorded before it cannot. It converts "the test passed" into a statement with content.
 
 If no observable can be named that would reject H₀, stop. The claim is either vacuous, or not empirical, or not yet sharpened. Return to step 1 or say so plainly.
 
@@ -165,6 +171,7 @@ These are the ways a verification produces a confident-looking result while prov
 H₀: [the claim, strongest form — what this experiment tries to prove false]
 H₁: [the most plausible rival if H₀ falls]
 Rejected if: [the specific observable that would reject H₀]
+             (copied from the message sent in step 2, not composed here)
 
 ## Experiment
 [Path to the script, and one or two sentences on why this design discriminates]
@@ -186,7 +193,9 @@ Now believed: [H₁, or the third thing that turned out true, or H₀ as stated]
 [Code, plans, or docs that need correcting. Omit if none.]
 ```
 
-For a single quick probe, collapse this — but never drop H₀, its falsification condition, the raw output, or the restatement of H₀ in the verdict. Those are what separate this from a confident guess.
+This block is the final assembly, written after the run. It is not where H₀ is *decided* — step 2 already sent that as its own message, and the Hypotheses section here reproduces it. The two copies being identical is the point: the verdict's restatement can be checked against a message that existed before the run, which is what makes the whole report auditable rather than merely well-formatted.
+
+For a single quick probe, collapse this — but never drop H₀, its falsification condition, the raw output, or the restatement of H₀ in the verdict. Those are what separate this from a confident guess. Collapsing never means merging step 2's message into the final one; a one-line pre-registration sent on its own still costs almost nothing.
 
 ## Scope
 

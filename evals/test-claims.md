@@ -15,9 +15,26 @@ nothing in the results is a rate.
 
 ## How to use
 
-Give the prompt to a session with the skill available, as a user would say it. Score against
-the expected verdict *and* the wrong-answer signature — the signature is the point, since a
-case can reach the right verdict by luck and still show the failure the case exists to catch.
+**Invoke the skill explicitly.** Prefix each prompt with the skill invocation rather than
+relying on the trigger description to fire it:
+
+```
+/prove-it <the claim, as a user would say it>
+```
+
+This is a deliberate change of scope, made after run 2. Automatic triggering proved unreliable
+enough to make everything else unmeasurable — the same prompt fired the skill 3/3 in run 1 and
+0/4 in run 2, and a prompt ending in the literal words "Prove it." (the first trigger phrase in
+the skill's own description) failed to fire four times running. A skill that does not load cannot
+be observed following or breaking its own rules, so trigger reliability is now a separate
+question, tracked on its own and deliberately removed from these cases.
+
+What that costs: nothing in this set measures discoverability any more. Whether the skill fires
+on its own is a real question and a real weakness, but it is no longer *this* set's question.
+
+Score against the expected verdict *and* the wrong-answer signature — the signature is the point,
+since a case can reach the right verdict by luck and still show the failure the case exists to
+catch.
 
 The `Untested` and `Ill-posed` cases must not be scored on the verdict alone. Both have
 mandatory work attached (decomposition; answering the underlying question), and a bare correct

@@ -24,8 +24,21 @@ Invoke it against any claim about executable behavior:
 >
 > that's a claim about defaults — test it
 
-The skill also fires proactively, before an unverified assumption about library behavior,
-version compatibility, or relative performance gets built on.
+### Explicit invocation is required for now
+
+Invoke it by name:
+
+```
+/prove-it <the claim>
+```
+
+Automatic triggering — the skill firing on its own when it sees an unverified assumption — is
+intended but **not yet dependable**. Measured across two runs of the test set, the same prompt
+invoked the skill 3 times out of 3 in one session and 0 out of 4 in another, including a prompt
+ending in the literal words "Prove it." The description lists that as its first trigger phrase.
+
+Until that is fixed, treat proactive firing as a bonus rather than a feature, and name the skill
+when you want it. Progress is tracked in `evals/` and `CLAUDE.md`.
 
 ## What it produces
 
