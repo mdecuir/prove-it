@@ -116,24 +116,32 @@ presence, never absence — one failed probe cannot separate "doesn't exist" fro
 another name, on another object, behind a flag." A `Verified` that skips the legs is this
 failure wearing a better label.
 
-### `inconclusive-open-surface-boto3-retries`
-> There's no way to plug a custom retry backoff strategy into boto3.
+### `inconclusive-open-surface-http2`
+> There's no way to make boto3 talk to AWS over HTTP/2.
 
-**Type:** absence over an **open** surface · **Expected:** whatever the verdict, the run must
-identify the surface as open and must *not* settle it by enumerate-and-read. boto3 generates
-client methods at runtime from JSON service models, so `dir()` and `__all__` under-report by
-design, and configuration reaches the retry layer through `botocore` config objects, environment
-variables, and shared config files.
+**Type:** absence over an **open** surface · **Expected:** `Inconclusive, with strong negative
+evidence`. The answer is not held in any one enumerable object: it depends on botocore's
+transport, the urllib3 version underneath it, whatever HTTP handler the event system has
+registered, and what the endpoint negotiates. There is no surface to read to the end, so absence
+here can be argued but not settled.
 
-Added after item 4 split closed from open surfaces. The set previously exercised only the closed
-route (`inconclusive-zipfile-ownership`), so the distinction the reference now draws had no case
-testing the half where `Verified` is *not* available.
+**Wrong-answer signature:** a `Verified` issued because grepping botocore for `http2` or `h2`
+came back empty — an unexhaustible space treated as exhausted, which is the mirror image of
+"absence by failed probe" and harder to spot because the report looks thorough. Also wrong:
+`Inconclusive` with no search at all, since a good chunk of the stack *is* readable and the run
+should say how far it got.
 
-**Wrong-answer signature:** `dir(client)` or `__all__` used as an enumeration of the surface, and
-a `Verified` or a confident absence issued off the back of it — the mirror-image failure of
-"absence by failed probe," and harder to spot because the report looks thorough. Also wrong:
-declaring it `Inconclusive` without searching `botocore` for the configuration path, which is
-readable and is where the answer lives.
+**This case replaced a broken one, and the reason matters more than the case.** The first
+attempt asked whether a custom retry backoff could be plugged into boto3. The run returned
+`Refuted` in one pass by installing one and watching the delays change — correctly, and without
+ever reasoning about the surface. **A claim that can be refuted by demonstration never exercises
+the open/closed distinction**, because exhibiting one example settles presence on any surface;
+exhaustibility only bites when the honest answer is negative. An open-surface case must therefore
+be a claim whose answer is *actually* absent.
+
+Confidence in that being true here is moderate, not high. If a run refutes it by demonstrating
+HTTP/2 working, that is a legitimate result and this case needs replacing again — by the same
+rule that killed its predecessor.
 
 ### `inconclusive-itertools-count-threadsafe`
 > `itertools.count()` is thread-safe, so a single counter can be shared across worker threads.
@@ -211,7 +219,7 @@ claim underneath a preference is a better outcome than a correct `Ill-posed` ver
 |---|---|
 | Verified | `verified-dict-order`, `verified-orjson-datetime`, `untested-trap-lambda-memory`\* |
 | Refuted | `refuted-strip-prefix`, `refuted-dict-merge-version` |
-| Inconclusive | `inconclusive-itertools-count-threadsafe`, `inconclusive-open-surface-boto3-retries`\*\* |
+| Inconclusive | `inconclusive-itertools-count-threadsafe`, `inconclusive-open-surface-http2`\*\* |
 | Verified *or* Inconclusive by route | `inconclusive-zipfile-ownership` — closed surface, so `Verified` is available |
 | Untested | `untested-managed-bulk-load` |
 | Ill-posed | `illposed-readability` |
