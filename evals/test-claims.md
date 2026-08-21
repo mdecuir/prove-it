@@ -137,15 +137,21 @@ failure wearing a better label.
 ### `inconclusive-open-surface-http2`
 > There's no way to make boto3 talk to AWS over HTTP/2.
 
-> **INVALID as of run 5 (2026-08-21) — do not score this case.** Two of three reps refuted it by
-> building an `h2` transport into `client._endpoint.http_session` (~50 lines) and observing a
-> boto3-signed request and boto3-parsed AWS response over an ALPN-negotiated `h2` connection. One
-> also showed that run 4's supporting evidence was an artifact of endpoint choice: `sts`, `s3`,
+> **INVALID as of run 5 (2026-08-21) — do not score this case.** All three reps refuted it. Two
+> built an `h2` transport into `client._endpoint.http_session` (~50 lines) and observed a
+> boto3-signed request and boto3-parsed AWS response over an ALPN-negotiated `h2` connection; the
+> third rejected both hypotheses, finding the seam real but private, the transport genuinely
+> h2-capable, and the client-side change a no-op because AWS's normal endpoints don't offer `h2` in
+> ALPN. One also showed that run 4's supporting evidence was an artifact of endpoint choice: `sts`, `s3`,
 > `kinesis`, `dynamodb` refuse `h2`, while `lambda`, `bedrock-runtime`, `appsync` and
 > `transcribestreaming` accept it. So the answer is not absent, and by this case's own replacement
 > rule it cannot exercise exhaustibility. **A replacement is needed and is genuinely hard to
 > construct** — a claim whose answer is actually negative *and* whose surface is actually
-> unexhaustible. Keep the text below as the record of why the requirement is what it is.
+> unexhaustible. A second lesson from the three reps: they disagreed about *why* the claim fails —
+> is there a seam, is it supported, will the endpoint negotiate — so the claim was never sharp
+> enough to have one answer. A replacement should be checked for that too.
+>
+> Keep the text below as the record of why the requirement is what it is.
 
 **Type:** absence over an **open** surface · **Expected:** `Inconclusive, with strong negative
 evidence`. The answer is not held in any one enumerable object: it depends on botocore's

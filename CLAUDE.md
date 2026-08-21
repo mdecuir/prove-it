@@ -272,8 +272,9 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
 
 9. Add an `Inconclusive` worked example, and cases that probe the hallucinated-parameter failure
    directly. **`inconclusive-open-surface-http2` is no longer the candidate** — run 5 refuted the
-   claim by building an h2 transport in ~50 lines, and showed run 4's supporting evidence was an
-   artifact of sampling three endpoints that don't offer h2. That case is marked invalid and needs a
+   claim in all three reps (two by building an h2 transport in ~50 lines, one by rejecting both
+   hypotheses), and showed run 4's supporting evidence was an artifact of sampling three endpoints
+   that don't offer h2. That case is marked invalid and needs a
    replacement: a claim whose answer is *actually* absent over a surface that is *actually*
    unexhaustible. Both halves at once is the hard part.
 
