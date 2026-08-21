@@ -82,13 +82,29 @@ that instinct is actively dangerous once a cloud account is in reach.
   that is merely expensive.
 - **The trigger description is unoptimised.** It was hand-written to be somewhat pushy per
   skill-creator guidance, but never run through the description-tuning loop.
-- **The test set has been run twice, n=1 per case each time.** `evals/test-claims.md` plus
-  `evals/results-2026-08-20.md` and `evals/results-2026-08-21.md` (runs 2–4). Run 4 swept all
-  twelve on verdict; nothing in that is a rate, and the ponytail confound (below) is uncontrolled
-  in run 4 — ponytail was active in every run, visibly influencing report endings without
-  suppressing anything. It is markdown rather than `evals/**/case.yaml` because
-  `claude plugin eval` is gated behind early access on this account and its schema couldn't be
-  read from the tool; `claude plugin eval init --bare` just prints the gate message.
+- **Eleven scorable cases, not twelve, and n=1 for most of them.** `evals/test-claims.md` plus
+  `evals/results-2026-08-20.md` and `evals/results-2026-08-21.md` (runs 2–5). Run 4 swept all
+  twelve on verdict; run 5 then invalidated one of them (`inconclusive-open-surface-http2` — the
+  claim is false, so it cannot test exhaustibility) and made a second reading-dependent
+  (`inconclusive-zipfile-ownership` — `Verified` and `Refuted` are both correct answers to
+  different readings, so the case now scores whether the reading is named). The open-surface slot
+  is therefore **empty**, which is the biggest hole in the set: nothing currently tests the
+  open/closed distinction in the direction where it bites.
+
+  Nothing in any of this is a rate. Three cases have n=3 (run 5's arm 1); the rest are n=1. The
+  ponytail confound (below) is uncontrolled from run 4 onward — ponytail was active in every run,
+  visibly influencing report endings without suppressing anything.
+
+  The set is markdown rather than `evals/**/case.yaml` because `claude plugin eval` is gated behind
+  early access on this account and its schema couldn't be read from the tool;
+  `claude plugin eval init --bare` just prints the gate message.
+
+- **A scored pass in the record is not the same as a correct result.** Run 4's http2 row was scored
+  a pass, written up as the best run on the set, and lined up as a worked example; three reps the
+  next day refuted the claim outright and traced run 4's supporting evidence to which three
+  endpoints it happened to sample. It was caught only because the case was re-run for an unrelated
+  reason. Treat every n=1 row in these results as provisional, and re-run before promoting one into
+  documentation.
 - **No worked example of an `Inconclusive` or `Untested` verdict.** Four examples now, covering
   semantic, performance, comparative (`orjson-datetime.md`, the one **Verified**) and concurrency
   (`count-thread-safety.md`). The concurrency case was *expected* to land Inconclusive and landed
@@ -240,9 +256,15 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
      it for you" and returned `Verified`. The case now accepts either verdict and scores whether the
      run *names the reading*. Do not re-flatten it to one expected label.
 
-7. **Whether run 3's explicit surface triage is typical is still open**, and the zipfile case can
-   no longer test it — its ambiguity is now the thing it measures. That question needs a
-   closed-surface absence claim with only one sensible reading.
+7. **Rebuild the absence-claim coverage.** Two related holes, and this is now the top eval-set
+   priority because edit 4's closed/open split is the least-tested load-bearing change in the skill:
+   - **An open-surface case with an actually-absent answer.** The slot is empty; two attempts have
+     died to the same rule. Both halves at once is the hard part — claims that are false are easy to
+     find, and claims that are genuinely absent are usually absent because the surface is closed.
+   - **A closed-surface case with only one sensible reading**, to answer the question the zipfile
+     case can no longer answer: is run 3's explicit surface triage typical, or was it one good run?
+     Run 4 reached the right verdict without naming the surface at all, and run 5's reps argued a
+     different reading entirely, so n=4 on that case says nothing about the triage.
 
 8. Make automatic invocation dependable, or decide it isn't worth it. Two of twelve across run 5's
    arms; `"Prove it."` fired 0 of 4 again. Needs a trigger-only eval — many prompts, several reps,
