@@ -1,6 +1,6 @@
 # Test set: claims with known-correct verdicts
 
-Ten claims chosen so that the *right* answers are spread across every verdict the skill can
+Eleven claims chosen so that the *right* answers are spread across every verdict the skill can
 return. A run that lands `Verified` on all ten is broken in the most dangerous way, because
 it would look like a pass.
 
@@ -116,6 +116,25 @@ presence, never absence — one failed probe cannot separate "doesn't exist" fro
 another name, on another object, behind a flag." A `Verified` that skips the legs is this
 failure wearing a better label.
 
+### `inconclusive-open-surface-boto3-retries`
+> There's no way to plug a custom retry backoff strategy into boto3.
+
+**Type:** absence over an **open** surface · **Expected:** whatever the verdict, the run must
+identify the surface as open and must *not* settle it by enumerate-and-read. boto3 generates
+client methods at runtime from JSON service models, so `dir()` and `__all__` under-report by
+design, and configuration reaches the retry layer through `botocore` config objects, environment
+variables, and shared config files.
+
+Added after item 4 split closed from open surfaces. The set previously exercised only the closed
+route (`inconclusive-zipfile-ownership`), so the distinction the reference now draws had no case
+testing the half where `Verified` is *not* available.
+
+**Wrong-answer signature:** `dir(client)` or `__all__` used as an enumeration of the surface, and
+a `Verified` or a confident absence issued off the back of it — the mirror-image failure of
+"absence by failed probe," and harder to spot because the report looks thorough. Also wrong:
+declaring it `Inconclusive` without searching `botocore` for the configuration path, which is
+readable and is where the answer lives.
+
 ### `inconclusive-itertools-count-threadsafe`
 > `itertools.count()` is thread-safe, so a single counter can be shared across worker threads.
 
@@ -192,13 +211,17 @@ claim underneath a preference is a better outcome than a correct `Ill-posed` ver
 |---|---|
 | Verified | `verified-dict-order`, `verified-orjson-datetime`, `untested-trap-lambda-memory`\* |
 | Refuted | `refuted-strip-prefix`, `refuted-dict-merge-version` |
-| Inconclusive | `inconclusive-zipfile-ownership`, `inconclusive-itertools-count-threadsafe` |
+| Inconclusive | `inconclusive-itertools-count-threadsafe`, `inconclusive-open-surface-boto3-retries`\*\* |
+| Verified *or* Inconclusive by route | `inconclusive-zipfile-ownership` — closed surface, so `Verified` is available |
 | Untested | `untested-managed-bulk-load` |
 | Ill-posed | `illposed-readability` |
 | Sharpen instead of verdict | `illposed-trap-requests-vs-httpx` |
 
 \* either Verified or Refuted is acceptable there; the case tests that it isn't `Untested`.
 
-Claim types exercised: semantic, comparative, version-compatibility, absence, concurrency,
-impractical, non-empirical. **Performance is deliberately absent** — it is the one category
+\*\* the verdict is not what this case scores. It scores whether the surface is recognised as
+open — unexhaustible by enumeration — regardless of which way the answer falls.
+
+Claim types exercised: semantic, comparative, version-compatibility, absence (both a closed and
+an open surface), concurrency, impractical, non-empirical. **Performance is deliberately absent** — it is the one category
 with a full worked example already in `examples/reread-cost.md`.

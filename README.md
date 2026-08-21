@@ -74,9 +74,11 @@ test, so they can only confirm it. This is the single most common way a verifica
 proving nothing.
 
 Beyond that, the verdicts that aren't `Verified` are treated as legitimate outcomes rather
-than failures to be avoided. `Inconclusive` is where honest verification lands for absence and
-thread-safety claims — exactly the categories where manufactured confidence does the most
-damage. `Untested` covers the claim that is perfectly empirical but out of reach: real money,
+than failures to be avoided. `Inconclusive` is where honest verification lands for thread-safety
+claims, and for absence claims over a surface that cannot be exhausted — exactly the categories
+where manufactured confidence does the most damage. An absence claim over a *closed* surface is
+different: decomposed into positive legs and paired with a control, it can genuinely reach
+`Verified`. `Untested` covers the claim that is perfectly empirical but out of reach: real money,
 production access, or a scale you don't have. It carries mandatory work rather than a shrug —
 run the local half, cite the remote half as *sourced* rather than observed, and name the
 smallest real trial that would settle it. Never provision billable infrastructure to remove

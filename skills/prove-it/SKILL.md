@@ -186,6 +186,7 @@ Treat absence from this list as weak evidence, and move a row up the moment a ru
 | Retrofitted claim | The verdict's restatement of H₀ is narrower than the committed wording — check it against the text, not the memory |
 | Verdict with no restatement | "Refuted." Refuted *what*? The claim has scrolled away, so nobody re-checks the fit between it and the evidence |
 | Absence by failed probe | One probe failed, therefore the feature doesn't exist — see `references/experiment-patterns.md` |
+| Open surface treated as closed | An absence claim gets a `Verified` over a space that was never exhaustible — a service, a `__getattr__`, a plugin registry, an unreadable extension. Same error as the row above, opposite direction, and harder to spot because the report looks thorough |
 | Citation reported as observation | The vendor's docs agree with the claim, so it's called Verified. Nothing ran; a source was found |
 | Untested as a shrug | A barrier is named and the report stops there — no local half run, no source cited, no real trial specified |
 | Proxy for the unmeasurable | An inexecutable claim is silently replaced by an adjacent measurable one, and the proxy's result is offered as the verdict |

@@ -58,8 +58,9 @@ Three, in descending order of how much the skill depends on them:
    under test and can only confirm it.
 
 Supporting decision: the non-`Verified` verdicts are first-class. `Inconclusive` exists
-because absence claims and thread-safety claims genuinely cannot be settled by execution — a
-failed probe isn't proof of absence, and clean concurrent runs aren't proof of safety.
+because thread-safety claims genuinely cannot be settled by execution, and neither can absence
+claims over a surface that cannot be exhausted — a failed probe isn't proof of absence, and clean
+concurrent runs aren't proof of safety.
 Manufactured confidence in those categories is the failure mode worth designing against, so
 don't "improve" the skill by making it more decisive there.
 
@@ -170,11 +171,25 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
    **Still open as its own question:** make automatic invocation dependable. It needs a
    trigger-only eval — many prompts, several reps each, scored purely on whether the skill loads —
    which is a different instrument from `test-claims.md`. Do not fold it back in.
-4. **Split closed from open surfaces in the absence-claims reference (finding 5).** A stdlib
-   module whose source you can read end to end is not the same problem as a service or a library
-   with dynamic attributes. `Verified` is reachable for the first by enumerate-and-read; only the
-   second is inherently `Inconclusive`. Run 1's `zipfile` case did this correctly and the
-   reference did not describe it.
+4. ~~Split closed from open surfaces in the absence-claims reference (finding 5).~~ **Done.** The
+   section now opens with two triage questions — is the surface closed or open, and is the claim
+   about the library or about what you can achieve with it — and gives three verdict routes rather
+   than one.
+
+   The substantive addition is the technique run 1's `zipfile` case invented and the reference did
+   not describe: **decompose absence into presence.** "There is no way to X" is unfalsifiable, but
+   split along the paths X would travel — does the write path record it, does the object model
+   expose it, does the read path apply it — each leg becomes a positive claim a single run can
+   reject. On a closed surface, three settled positives plus a control is a conjunction, not an
+   argument from ignorance, which is what makes `Verified` defensible.
+
+   Also captured: coincidental matches as the specific hazard of searching for absence (the run's
+   gid-`20` hits were both the `version_needed` field), and the mirror-image failure of treating an
+   open surface as closed, now a row in the predicted table.
+
+   **Do not flatten this back into "absence claims are always Inconclusive."** The load-bearing
+   decision above was reworded to match; over-conservatism here was a real defect that a real run
+   exposed.
 5. Re-run the set after 1–4 to see which findings move, and add the missing comparative and
    verified worked examples. `inconclusive-itertools-count-threadsafe` is a candidate worked
    example in its own right (finding 7) — it is the best run of the set and the only observed

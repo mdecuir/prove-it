@@ -100,20 +100,56 @@ If the older version can't be installed in the current environment — dropped P
 
 *"The library doesn't support X." "There's no way to configure that."*
 
-Structurally the hardest, and worth being explicit with the user about why: execution can demonstrate presence but not absence. A failed probe shows *that probe* failed. It cannot distinguish "the feature doesn't exist" from "it exists under a different name, on a different object, behind a flag, or in a submodule you didn't import."
+Execution demonstrates presence directly and absence only by argument. A failed probe shows *that probe* failed; on its own it cannot distinguish "the feature doesn't exist" from "it exists under a different name, on a different object, behind a flag, or in a submodule you didn't import."
 
-H₁ is not "the feature exists" but the specific ways it could exist unseen: under another name, on another object, behind a flag, in an unimported submodule. Enumerate those before probing — they are the search plan.
+But that is not the end of it, and treating every absence claim as unsettleable is its own failure. How much can be established depends on whether the surface is closed.
 
-The best available approach is convergent evidence:
+### First, decide the shape of the claim
+
+Two questions, before designing anything.
+
+**Is the surface closed or open?**
+
+A **closed** surface can be enumerated and read to the end. A stdlib module, an installed pure-Python package, a vendored dependency — you can list every attribute, read every line that implements the relevant paths, and know you have seen all of it. Absence here is a claim about a finite object, and a finite object can be exhausted. **Verified is reachable**, scoped to the version.
+
+An **open** surface cannot. Signs it is open: a service behind an API; `__getattr__` or `__getattribute__` synthesising attributes on demand; a plugin registry or entry points a third party can add to; dispatch through a C extension or binary you cannot read; anything configured by environment or remote state. Absence here is a claim about an unbounded space, and the honest verdict stays **Inconclusive, with strong negative evidence**.
+
+Do not assume the answer. `dir()` on a module with a module-level `__getattr__` looks closed and is not.
+
+**Is the claim about the library, or about what you can achieve with it?**
+
+"`zipfile` does not store file ownership" and "you cannot preserve ownership through a zip" are different claims, and the second is usually what the user meant. A library that does not participate in a feature may still carry it: an opaque bytes field that round-trips intact lets you encode ownership yourself and apply it on extract, so the library is a courier rather than a participant. Settle whichever claim was made, and say plainly if the other one has a different answer.
+
+### Then decompose absence into presence
+
+This is the move that makes a closed-surface absence claim tractable, and it is worth reaching for before the convergent-evidence checklist below.
+
+"There is no way to X" is one unfalsifiable claim. Split it along the paths X would have to travel, and each piece becomes a positive claim that a single run can reject:
+
+- does the **write** path record it?
+- does the **object model** expose it?
+- does the **read** path apply it?
+
+Each leg is now falsifiable by observation rather than by failure to find. If all three hold and the surface is closed, you have a conjunction of settled positives, not an argument from ignorance — which is why `Verified` is defensible there. If any leg cannot be closed, that leg is what makes the whole thing Inconclusive, and you can say exactly which.
+
+Pair the negative legs with a control that proves the probe would have detected the feature had it been present. A run showing "extract produced uid 501, not the archive's 12345" means much more alongside "and a real `chown(12345)` in this harness raises" — without it, the negative is indistinguishable from a probe that never fired.
+
+### Convergent evidence, for what the legs don't cover
 
 1. Probe the obvious API surface and show it failing.
-2. Enumerate the actual surface — `dir()`, `inspect.signature`, the type stubs, the module's `__all__` — and show the feature isn't in it.
-3. Search the installed source, not just the public API.
+2. Enumerate the actual surface — `dir()`, `__all__`, `__slots__`, `inspect.signature`, the type stubs — and show the feature isn't in it.
+3. Search the installed source, not just the public API. Grep the implementation of the specific paths, not the package as a whole.
 4. Check the documentation and changelog for the feature under other names.
 
-Then report it as *no evidence found across these four probes*, not as proof of absence. The honest verdict for most absence claims is **Inconclusive, with strong negative evidence** — and that phrasing is more useful to the user than false certainty, because it tells them what kind of further search might still pay off.
+**Coincidental matches are the specific hazard here.** Searching bytes or source for something you expect to be absent produces false positives, and a false positive on an absence claim reads as a refutation. A run searching a zip archive for a gid of `20` found two matches, both of which were the `version_needed` field holding `\x14\x00` for "2.0". Disambiguate every hit by offset or context before letting it change the verdict — an unexamined match is as bad as an unexamined `AttributeError`.
 
-**False green:** one `AttributeError` reported as proof the feature doesn't exist.
+### Verdicts
+
+- **Closed surface, all legs settled, control in place** → `Verified`, scoped to the version and to the exact claim (library-does-not vs cannot-be-achieved).
+- **Closed surface, a leg you couldn't settle** → `Inconclusive`, naming the leg.
+- **Open surface** → `Inconclusive, with strong negative evidence`, listing what was searched. This phrasing beats false certainty because it tells the user which further search might still pay off.
+
+**False green:** one `AttributeError` reported as proof the feature doesn't exist. **And its mirror image:** an open surface treated as closed, so a `Verified` gets issued over a space that was never exhaustible — same error, opposite direction, and harder to spot because the report looks thorough.
 
 ---
 
