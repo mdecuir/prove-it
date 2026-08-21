@@ -140,7 +140,38 @@ A refuted claim usually has descendants. Find them:
 
 ## Failure modes
 
-These are the ways a verification produces a confident-looking result while proving nothing. Check against them before reporting.
+Two tables, split by whether anyone has actually watched the failure happen. The distinction is
+not decoration: the first table is evidence and the second is conjecture, and conflating them is
+the same error the skill exists to prevent, committed in its own documentation.
+
+Both are worth checking against before reporting. Only the first is worth trusting.
+
+### Observed
+
+Seen in real runs of this skill against `evals/test-claims.md`. The case column names where.
+
+| Failure | What it looks like | Seen in |
+|---|---|---|
+| Whole report in one closing message | The model reasons silently, runs the experiment, then emits Claim, Hypotheses, Raw output and Verdict together. On the page the order is perfect; H₀ was composed with the output already in view. **Nothing in the finished artifact can reveal this** — only message order can, which is why step 2 requires its own message | `verified-dict-order`, `refuted-dict-merge-version` (run 1) |
+| Uncited vendor facts, because triage never ran | Billing models, quotas and limits for named services stated confidently from memory, with no citation and no date. The claim was never classified, so the skill's own rule about sourcing the remote half never applied | `untested-managed-bulk-load`, both arms (run 1) |
+| The skill never loads | Cost, capacity and preference claims do not trigger it, and triggering is unreliable even for prompts containing its own verbatim trigger phrases. A procedure that is not loaded cannot be observed following or breaking its rules | run 1 findings 2–3; run 2 (3/3 → 0/4) |
+| The instrument was wrong, not the result | A verification whose *measurement* is broken while its subject is fine. Three in this skill's own evaluation: a regex that scored formatting instead of substance and reported failures that had not happened; an unpinned `--model` that left two runs non-comparable; a detector keyed on a tool call that slash invocation never emits | `evals/results-2026-08-21.md` |
+| Version drift | Claim was about v2; the environment silently resolved v3. Observed in this skill's own harness rather than in a run — two runs were compared before anyone checked they used the same model | run 2 harness |
+
+### Predicted, not yet observed
+
+Reasoned about rather than witnessed. None occurred in the fifteen runs that both engaged the
+skill and executed something — the only population in which they *could* have been observed, out
+of twenty-five runs total. That is too small a sample to delete them, and large enough that they
+should stop being presented as peers of the rows above.
+
+Several are actively contradicted by what runs did instead. Controls appeared unprompted and
+were used well: one run noticed its positive control came back *clean*, concluded its harness
+could not see races at all, and rebuilt for sensitivity before trusting anything. Observed values
+were printed rather than asserted in every run. One run was handed an unmeasurable claim, was
+offered an obvious executable proxy, and refused it explicitly.
+
+Treat absence from this list as weak evidence, and move a row up the moment a run shows it.
 
 | Failure | What it looks like |
 |---|---|
@@ -148,7 +179,6 @@ These are the ways a verification produces a confident-looking result while prov
 | Mocking the thing under test | The mock encodes the assumption, so the test can only confirm it |
 | Assertion without observation | `assert result == expected` passes; the actual value is never printed |
 | No-error means correct | Script exits 0, so the claim is treated as confirmed, though nothing was checked |
-| Version drift | Claim was about v2; the environment silently resolved v3 |
 | The easy case only | The claim is tested where it obviously holds, never at the boundary where it might not |
 | Single-shot benchmark | One timing run, no warmup, no variance — noise reported as a finding |
 | Unfalsifiable null | H₀ hedged ("generally", "in most cases") until no observation could reject it |

@@ -138,11 +138,21 @@ Run 1 is done. These are the edits it justified; the evidence for each is in
    Verified in run 2 under explicit invocation: 4 of 4 runs pre-registered before writing or
    running anything, against 3 of 9 composing H₀ after the output in run 1. n=4, one claim type
    — the mechanism works, the effect size is unknown.
-2. **Rewrite the failure-mode table into two tables (findings 1–3, 8).** Observed, with the case
-   that showed it; and predicted-but-unseen, marked as such. Add rows for: report-in-one-message,
-   vendor facts asserted without citation because triage never ran, and skill not firing at all.
-   Do not delete the four unobserved rows — twelve runs is too few — but stop presenting them as
-   equals of the observed ones.
+2. ~~Rewrite the failure-mode table into two tables (findings 1–3, 8).~~ **Done.** `SKILL.md` now
+   has **Observed** (five rows, each naming the run that showed it) and **Predicted, not yet
+   observed** (fifteen rows, unchanged). The preamble says why the split exists: conflating
+   evidence with conjecture is the error the skill exists to prevent, committed in its own
+   documentation.
+
+   The denominator is stated honestly. "Not observed" is scoped to the **fifteen runs that both
+   engaged the skill and executed something** — the only population where those failures could
+   appear — out of twenty-five runs total. Nothing was deleted; the note says to promote a row the
+   moment a run shows it.
+
+   Two observed rows are about this evaluation's own harness rather than about a run: *the
+   instrument was wrong, not the result* (three instances) and *version drift*. They are marked as
+   such. Keeping them is deliberate — they are real instances of the failure, and the skill has no
+   business exempting its own tooling.
 3. ~~Fix the trigger description (findings 2, 3).~~ **Rewritten, and then descoped.** The old
    description promised "designing, writing, and running a minimal experiment," so a claim that
    cannot be run read as out of scope — triage, `Untested`, and `Ill-posed` were never advertised
